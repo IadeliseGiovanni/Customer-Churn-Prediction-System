@@ -13,8 +13,6 @@ python ml/preprocessing.py
 python ml/train_model.py
 python ml/evaluate.py
 
-<<<<<<< HEAD
-=======
 * Machine Learning
 * Data pipeline
 * Backend API
@@ -187,7 +185,6 @@ Output:
 Avvio server:
 
 ```
->>>>>>> 5e66567b6ce43356bbc6d15a870380efecd64f3a
 uvicorn backend.api:app --reload
 
 streamlit run frontend/dashboard.py
