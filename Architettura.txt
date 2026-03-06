@@ -1,0 +1,29 @@
+customer-churn-ml/
+│
+├── data/
+│   ├── raw/
+│   │   └── telco_churn.csv
+│   └── processed/
+│       └── clean_telco.csv
+│
+├── backend/
+│   └── api.py
+│
+├── frontend/
+│   └── dashboard.py
+│
+├── ml/
+│   ├── preprocessing.py
+│   ├── train_model.py
+│   ├── evaluate.py
+│   └── predict.py
+│
+├── outputs/
+│   ├── predictions.csv
+│   └── metrics.csv
+│
+├── utils/
+│   └── data_loader.py
+│
+├── requirements.txt
+└── README.md

@@ -1,0 +1,33 @@
+DATASET
+   │
+   ▼
+DATA CLEANING
+(preprocessing.py)
+   │
+   ▼
+FEATURE ENGINEERING
+(preprocessing.py)
+   │
+   ▼
+TRAIN MODEL
+(train_model.py)
+   │
+   ▼
+MODEL EVALUATION
+(evaluate.py)
+   │
+   ▼
+PREDICTIONS
+(predict.py)
+   │
+   ▼
+CSV OUTPUT
+(predictions.csv + metrics.csv)
+   │
+   ▼
+BACKEND API
+(api.py)
+   │
+   ▼
+FRONTEND DASHBOARD
+(dashboard.py)
