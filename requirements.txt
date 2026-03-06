@@ -7,6 +7,5 @@ uvicorn[standard]
 streamlit
 matplotlib
 seaborn
-imbalanced-learn    # opzionale ma consigliato per SMOTE
 pydantic
 requests

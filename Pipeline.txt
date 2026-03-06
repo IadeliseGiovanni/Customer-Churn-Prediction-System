@@ -1,33 +1,33 @@
 DATASET
    │
    ▼
+EDA + VISUALIZATION
+(analysis/)
+   │
+   ▼
 DATA CLEANING
-(preprocessing.py)
+(ml/preprocessing.py)
    │
    ▼
 FEATURE ENGINEERING
-(preprocessing.py)
+(ml/preprocessing.py)
    │
    ▼
-TRAIN MODEL
-(train_model.py)
+MODEL TRAINING
+(ml/train_model.py)
    │
    ▼
 MODEL EVALUATION
-(evaluate.py)
+(ml/evaluate.py)
    │
    ▼
-PREDICTIONS
-(predict.py)
-   │
-   ▼
-CSV OUTPUT
-(predictions.csv + metrics.csv)
+PREDICTIONS CSV
+(ml/predict.py)
    │
    ▼
 BACKEND API
-(api.py)
+(backend/api.py)
    │
    ▼
 FRONTEND DASHBOARD
-(dashboard.py)
+(frontend/dashboard.py)

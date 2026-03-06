@@ -4,13 +4,8 @@ customer-churn-ml/
 │   ├── raw/
 │   │   └── telco_churn.csv
 │   └── processed/
-│       └── clean_telco.csv
-│
-├── backend/
-│   └── api.py
-│
-├── frontend/
-│   └── dashboard.py
+│       ├── train_raw.csv
+│       └── test_raw.csv
 │
 ├── ml/
 │   ├── preprocessing.py
@@ -18,12 +13,31 @@ customer-churn-ml/
 │   ├── evaluate.py
 │   └── predict.py
 │
-├── outputs/
-│   ├── predictions.csv
-│   └── metrics.csv
+├── analysis/
+│   ├── eda.py
+│   └── plots.py
+│
+├── backend/
+│   └── api.py
+│
+├── frontend/
+│   └── dashboard.py
 │
 ├── utils/
 │   └── data_loader.py
+│
+├── models/
+│   └── churn_pipeline_v1.joblib
+│
+├── outputs/
+│   ├── predictions.csv
+│   ├── metrics.csv
+│   └── plots/
+│       ├── churn_distribution.png
+│       ├── tenure_churn.png
+│       ├── monthly_charges_churn.png
+│       ├── correlation_matrix.png
+│       └── feature_importance.png
 │
 ├── requirements.txt
 └── README.md

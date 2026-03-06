@@ -1,52 +1,37 @@
-# ml/preprocessing.py
 from pathlib import Path
 import pandas as pd
-import joblib
 from sklearn.model_selection import train_test_split
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.impute import SimpleImputer
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / "data" / "raw" / "telco_churn.csv"
 PROC_DIR = ROOT / "data" / "processed"
-MODELS_DIR = ROOT / "models"
 
 PROC_DIR.mkdir(parents=True, exist_ok=True)
-MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
 def clean_raw(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-    # strip column names
     df.columns = [c.strip() for c in df.columns]
 
-    # convert TotalCharges (may contain blanks)
     if "TotalCharges" in df.columns:
         df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
 
-    # drop full-empty cols and duplicates by customerID if present
-    df = df.dropna(axis=1, how="all")
     if "customerID" in df.columns:
         df = df.drop_duplicates(subset=["customerID"])
     else:
         df = df.drop_duplicates()
 
-    # map target
     if "Churn" in df.columns:
         df["Churn"] = df["Churn"].map({"Yes": 1, "No": 0})
-    else:
-        raise ValueError("Colonna 'Churn' non trovata.")
 
     return df
 
-def split_save(df: pd.DataFrame, test_size=0.2, random_state=42):
-    # choose features: drop customerID and Churn
+def split_save(df: pd.DataFrame):
     feat_cols = [c for c in df.columns if c not in ("customerID", "Churn")]
     X = df[feat_cols]
     y = df["Churn"]
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size, stratify=y, random_state=random_state
+        X, y, test_size=0.2, stratify=y, random_state=42
     )
 
     train = pd.concat([X_train.reset_index(drop=True), y_train.reset_index(drop=True)], axis=1)
@@ -54,8 +39,6 @@ def split_save(df: pd.DataFrame, test_size=0.2, random_state=42):
 
     train.to_csv(PROC_DIR / "train_raw.csv", index=False)
     test.to_csv(PROC_DIR / "test_raw.csv", index=False)
-
-    print(f"Saved train_raw.csv ({len(train)}) and test_raw.csv ({len(test)}) in {PROC_DIR}")
 
 def main():
     df = pd.read_csv(RAW)
