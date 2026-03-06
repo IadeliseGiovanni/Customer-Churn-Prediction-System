@@ -75,9 +75,8 @@ reports/
 model_metrics.csv
 ```
 
----
 
-# Pipeline
+# ⚙️ Data & ML Pipeline
 
 ## 1 Data Preprocessing
 
@@ -145,9 +144,8 @@ Output:
 results/predictions.csv
 ```
 
----
 
-## 4 Backend API
+## 🌐 Backend API
 
 File:
 
