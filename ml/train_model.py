@@ -6,20 +6,15 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.impute import SimpleImputer
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
 
 ROOT = Path(__file__).resolve().parents[1]
-PROC_DIR = ROOT / "data" / "raw"
+PROC_DIR = ROOT / "data" / "processed"
 MODELS_DIR = ROOT / "models"
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
-df_raw = pd.read_csv(PROC_DIR / "Telco_customer_churn.csv")
-print(df_raw.head())
-print(df_raw.info())
-
-# Definiamo le colonne da scartare perché non predittive o disponibili solo post-churn
-drop_cols = ['CustomerID', 'Count', 'Country', 'State', 'City', 'Zip Code', 'Lat Long', 
-             'Latitude', 'Longitude', 'Churn Label', 'Churn Score' , 'Churn Value', 'Churn Reason']
+df_train = pd.read_csv(PROC_DIR / "test_raw.csv")
+print(df_train.head())
+print(df_train.info())
 
 X_raw = df_raw.drop(columns=drop_cols)
 y_raw = df_raw['Churn Value'] # Utilizziamo il valore numerico come target
