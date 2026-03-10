@@ -191,6 +191,78 @@ def plot_full_correlation_matrix(df, output_path):
     plt.savefig(output_path / "full_correlation_matrix_pearson.png", dpi=300, bbox_inches='tight')
     plt.close()
 
+
+def plot_demographic_analysis(df, output_path):
+    """
+    Analisi combinata Senior Citizen e Dependents.
+    Insight: I Senior Citizen senza persone a carico sono spesso il segmento a più alto rischio.
+    """
+    fig, ax = plt.subplots(1, 2, figsize=(15, 6))
+
+    # Senior Citizen vs Churn
+    sns.countplot(x="Senior Citizen", hue="Churn Value", data=df, palette=PALETTE, ax=ax[0])
+    ax[0].set_title("Senior Citizen Churn")
+
+    # Dependents vs Churn
+    sns.countplot(x="Dependents", hue="Churn Value", data=df, palette=PALETTE, ax=ax[1])
+    ax[1].set_title("Dependents vs Churn")
+
+    plt.savefig(output_path / "demographic_churn.png", dpi=300, bbox_inches='tight')
+    plt.close()
+
+def plot_economic_value_dist(df, output_path):
+    """
+    Violin Plot: Distribuzione di Avg Monthly Spend per Churn.
+    Insight: Mostra la 'pancia' della spesa dei clienti che se ne vanno rispetto a chi resta.
+    """
+    plt.figure(figsize=(10, 6))
+    sns.violinplot(x="Churn Value", y="Avg Monthly Spend", data=df, palette=PALETTE, inner="quart")
+    plt.title("Distribuzione Spesa Media Mensile per Status Churn")
+    plt.savefig(output_path / "economic_value_distribution.png", dpi=300)
+    plt.close()
+
+def plot_charges_per_service_analysis(df, output_path):
+    """
+    KDE Plot del costo per singolo servizio.
+    Insight: Se il costo per servizio supera una certa soglia, la probabilità di churn aumenta.
+    """
+    plt.figure(figsize=(10, 5))
+    for val, label in [("0", "Stayed"), ("1", "Churned")]:
+        sns.kdeplot(data=df[df["Churn Value"] == val], x="Charges per Service", 
+                    fill=True, label=label, color=PALETTE[val], alpha=0.5)
+    plt.title("Efficienza del Costo: Charges per Service vs Churn")
+    plt.xlabel("Costo medio per singolo servizio attivo ($)")
+    plt.legend()
+    plt.savefig(output_path / "charges_per_service_kde.png", dpi=300, bbox_inches='tight')
+    plt.close()
+
+def plot_outliers_boxplots(df, output_path):
+    """
+    Boxplot mirato per le feature presenti nei tuoi dati raw.
+    """
+    # Selezioniamo solo le numeriche che possono avere outlier reali
+    cols_to_plot = [
+        'TenureMonths', 
+        'MonthlyCharges', 
+        'TotalCharges', 
+        'Avg Monthly Spend', 
+        'Charges per Service'
+    ]
+    
+    # Assicuriamoci che TotalCharges sia numerico (spesso è object nei raw)
+    df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
+    
+    plt.figure(figsize=(16, 10))
+    for i, col in enumerate(cols_to_plot, 1):
+        plt.subplot(2, 3, i)
+        sns.boxplot(y=df[col], color="#e76f51", fliersize=5)
+        plt.title(f'Distribuzione {col}')
+        plt.grid(axis='y', alpha=0.3)
+    
+    plt.tight_layout()
+    plt.savefig(output_path / "boxplots_outliers.png", dpi=300)
+    plt.close()
+
 # --- MAIN EXECUTION ---
 
 if __name__ == "__main__":
@@ -219,5 +291,9 @@ if __name__ == "__main__":
     plot_scatter_tenure_charges(df, OUT_DIR)
     plot_num_services_count(df, OUT_DIR)
     plot_full_correlation_matrix(df, OUT_DIR)
+    plot_demographic_analysis(df, OUT_DIR)
+    plot_economic_value_dist(df, OUT_DIR)
+    plot_charges_per_service_analysis(df, OUT_DIR)
+    plot_outliers_boxplots(df, OUT_DIR)
     
     print(f"Analisi completata. Grafici salvati in: {OUT_DIR}")
