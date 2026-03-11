@@ -13,6 +13,7 @@ plt.rcParams.update({
     'axes.titlesize': 14,
     'axes.titleweight': 'bold',
     'legend.frameon': False
+    
 })
 
 PALETTE = {"0": "#2a9d8f", "1": "#e76f51"}
