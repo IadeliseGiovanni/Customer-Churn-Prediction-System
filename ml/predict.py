@@ -1,34 +1,32 @@
-﻿"""Prediction helper.
+"""Prediction helper.
 
 Scopo del modulo
 ----------------
-Questo modulo viene importato dal backend FastAPI (`backend/api.py`) e serve a:
+Questo modulo viene importato dal backend FastAPI (backend/api.py) e serve a:
 - prendere un singolo record (dict) inviato da API/UI
 - trasformarlo in un DataFrame compatibile con la Pipeline
-- restituire probabilità di churn + predizione binaria
+- restituire probabilita di churn + predizione binaria
 
 Problema che risolve
 --------------------
-In produzione spesso arrivano record *parziali* (non tutte le feature).
-La Pipeline però è stata addestrata su un set completo di colonne.
+In produzione spesso arrivano record parziali (non tutte le feature).
+La Pipeline e stata addestrata con lo schema derivato da train_raw.csv.
 Qui:
-- ricaviamo le colonne attese dal `preprocessor` salvato nella pipeline
+- ricaviamo le colonne attese dal preprocessor salvato nella pipeline
+- allineiamo i nomi alle colonne attese (normalizzazione semplice)
 - aggiungiamo le colonne mancanti come NA (gli imputers le gestiranno)
+- calcoliamo le feature derivate usate nel training (AvgMonthlySpend, NumServices, ChargesPerService)
 
 Soglia di decisione
 -------------------
-Il modello produce una probabilità `proba`.
-- Se `threshold` è None: usiamo `pipeline.predict` (default del modello)
-- Se `threshold` è un float (0-1): decidiamo churn se `proba >= threshold`
+Il modello produce una probabilita proba.
+- Se threshold e None: usiamo pipeline.predict (default del modello)
+- Se threshold e un float (0-1): decidiamo churn se proba >= threshold
 
-Print di verifica
-----------------
-Questo file stampa volutamente messaggi di verifica (sempre attivi) per:
-- confermare il caricamento del modello
-- mostrare lo schema in input e l'allineamento alle colonne attese
-- mostrare probabilità, soglia e predizione finale
-
-Nota: in un ambiente di produzione questi print possono essere rumorosi.
+Nota operativa
+--------------
+I nomi delle colonne in input dovrebbero riflettere quelli del CSV originale
+(es. "Tenure Months", "Monthly Charges", "Total Charges").
 """
 
 from pathlib import Path
@@ -49,10 +47,10 @@ def predict_record(record: dict, threshold: float | None = None) -> dict:
 
     Args:
         record: dizionario con (alcune) feature del cliente.
-        threshold: soglia opzionale per convertire la probabilità in classe.
+        threshold: soglia opzionale per convertire la probabilit� in classe.
 
     Returns:
-        dict con probabilità e predizione binaria.
+        dict con probabilit� e predizione binaria.
     """
 
     # 1) Dict -> DataFrame (una sola riga)
@@ -61,16 +59,12 @@ def predict_record(record: dict, threshold: float | None = None) -> dict:
 
     # 2) Normalizzazione nomi (alcuni input UI/API usano nomi diversi dal training)
     rename_map = {
-        "tenure": "TenureMonths",
-        "Tenure Months": "TenureMonths",
-        "Monthly Charges": "MonthlyCharges",
-        "Total Charges": "TotalCharges",
+        "tenure": "Tenure Months",
     }
     rename_cols = {k: v for k, v in rename_map.items() if k in df.columns and v not in df.columns}
     if rename_cols:
         print(f"[predict] renamed_cols={rename_cols}")
     df = df.rename(columns=rename_cols)
-
     # 3) Allineamento schema: stesse colonne viste in training
     # Recupero l'elenco delle feature attese dal ColumnTransformer salvato in pipeline.
     preprocessor = pipeline.named_steps.get("preprocessor")
@@ -81,6 +75,12 @@ def predict_record(record: dict, threshold: float | None = None) -> dict:
                 continue
             expected_cols.extend(list(cols))
 
+        expected_lookup = {c.replace(" ", "").lower(): c for c in expected_cols}
+        rename_norm = {c: expected_lookup.get(c.replace(" ", "").lower(), c) for c in df.columns}
+        rename_norm = {k: v for k, v in rename_norm.items() if k != v}
+        if rename_norm:
+            print(f"[predict] normalized_cols={rename_norm}")
+            df = df.rename(columns=rename_norm)
         missing_cols = [c for c in expected_cols if c not in df.columns]
         print(f"[predict] expected_cols={len(expected_cols)}")
         print(f"[predict] missing_cols={len(missing_cols)} sample={missing_cols[:10]}")
@@ -89,13 +89,36 @@ def predict_record(record: dict, threshold: float | None = None) -> dict:
         for col in missing_cols:
             df[col] = np.nan
 
-        # Feature derivata: se non arriva dal client ma possiamo calcolarla, la calcoliamo.
-        if "Avg Monthly Spend" in expected_cols and "Avg Monthly Spend" not in record:
-            if "TotalCharges" in df.columns and "TenureMonths" in df.columns:
-                total_charges = pd.to_numeric(df["TotalCharges"], errors="coerce")
-                tenure = pd.to_numeric(df["TenureMonths"], errors="coerce").replace(0, 1)
-                df["Avg Monthly Spend"] = total_charges / tenure
-                print("[predict] computed feature: Avg Monthly Spend")
+        # Feature derivate: se non arrivano dal client ma possiamo calcolarle, le calcoliamo.
+        if "AvgMonthlySpend" in expected_cols and "AvgMonthlySpend" not in df.columns:
+            if "Total Charges" in df.columns and "Tenure Months" in df.columns:
+                total_charges = pd.to_numeric(df["Total Charges"], errors="coerce")
+                tenure = pd.to_numeric(df["Tenure Months"], errors="coerce").replace(0, np.nan)
+                df["AvgMonthlySpend"] = total_charges / tenure
+                print("[predict] computed feature: AvgMonthlySpend")
+
+        if "NumServices" in expected_cols and "NumServices" not in df.columns:
+            service_cols = [
+                "Multiple Lines", "Online Security", "Online Backup", "Device Protection",
+                "Tech Support", "Streaming TV", "Streaming Movies", "Phone Service"
+            ]
+            available_services = [c for c in service_cols if c in df.columns]
+            if available_services:
+                service_map = {"Yes": 1, "No": 0, "No internet service": 0, "No phone service": 0}
+                service_numeric = (
+                    df[available_services]
+                    .replace(service_map)
+                    .apply(pd.to_numeric, errors="coerce")
+                    .fillna(0)
+                )
+                df["NumServices"] = service_numeric.sum(axis=1)
+                print("[predict] computed feature: NumServices")
+
+        if "ChargesPerService" in expected_cols and "ChargesPerService" not in df.columns:
+            if "Monthly Charges" in df.columns and "NumServices" in df.columns:
+                monthly = pd.to_numeric(df["Monthly Charges"], errors="coerce")
+                df["ChargesPerService"] = monthly / (df["NumServices"] + 1)
+                print("[predict] computed feature: ChargesPerService")
 
         # Conversione numeriche: spesso UI/API inviano numeri come stringhe.
         num_cols: list[str] = []
@@ -141,8 +164,8 @@ if __name__ == "__main__":
     # Esempio rapido: esegui `python ml/predict.py` per vedere i print di verifica.
     # Puoi modificare questo record con valori reali dal dataset.
     sample_record = {
-        "tenure": 12,
-        "MonthlyCharges": 70.0,
+        "Tenure Months": 12,
+        "Monthly Charges": 70.0,
         "Total Charges": 840.0,
         "Contract": "Month-to-month",
         "Internet Service": "Fiber optic",
@@ -153,5 +176,10 @@ if __name__ == "__main__":
     print("[predict] Running sample prediction...")
     result = predict_record(sample_record, threshold=0.6)
     print(f"[predict] result={result}")
+
+
+
+
+
 
 

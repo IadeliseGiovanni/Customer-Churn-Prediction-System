@@ -1,19 +1,19 @@
-﻿"""Evaluation script.
+"""Evaluation script.
 
 Scopo del modulo
 ----------------
-Verifica le performance del modello salvato da `ml/train_model.py` sul test set
-prodotto da `ml/preprocessing.py`.
+Verifica le performance del modello salvato da ml/train_model.py sul test set
+prodotto da ml/preprocessing.py.
 
 Input
 -----
-- `models/churn_pipeline_v1.joblib`
-- `data/processed/test_raw.csv`
+- models/churn_pipeline_v1.joblib
+- data/processed/test_raw.csv (colonna target "Churn Value")
 
 Output
 ------
-- `outputs/metrics.csv`: metriche riassuntive
-- `outputs/classification_report.txt`: report dettagliato per classe
+- outputs/metrics.csv: metriche riassuntive
+- outputs/classification_report.txt: report dettagliato per classe
 - plot matrice di confusione
 
 Metriche
@@ -21,8 +21,8 @@ Metriche
 - accuracy: accuratezza globale
 - precision: tra i predetti churn, quanti sono churn reali
 - recall: tra i churn reali, quanti ne intercetto
-- f1: armonica di precision e recall (utile se voglio equilibrio)
-- roc_auc: qualità del ranking probabilistico (indipendente dalla soglia)
+- f1: armonica di precision e recall
+- roc_auc: qualita del ranking probabilistico (indipendente dalla soglia)
 """
 
 from pathlib import Path
@@ -94,3 +94,4 @@ ConfusionMatrixDisplay.from_estimator(pipeline, X_test, y_test)
 plt.title("Matrice di Confusione - Errori del modello")
 #plt.show()
 plt.savefig(MODELS_DIR / "confusion_matrix.png")
+
