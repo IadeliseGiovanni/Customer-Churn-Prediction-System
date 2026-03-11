@@ -13,6 +13,7 @@ plt.rcParams.update({
     'axes.titlesize': 14,
     'axes.titleweight': 'bold',
     'legend.frameon': False
+    
 })
 
 PALETTE = {"0": "#2a9d8f", "1": "#e76f51"}
@@ -43,7 +44,7 @@ def plot_tenure_kde(df, output_path):
     """
     plt.figure(figsize=(10, 5))
     for val, label in [("0", "Stayed"), ("1", "Churned")]:
-        sns.kdeplot(data=df[df["ChurnValue"] == val], x="TenureMonths",
+        sns.kdeplot(data=df[df["Churn Value"] == val], x="TenureMonths", 
                     fill=True, label=label, color=PALETTE[val], alpha=0.5)
     plt.title("Distribuzione della Tenure: Clienti Fedeli vs Churned")
     plt.legend()
@@ -57,7 +58,7 @@ def plot_monthly_charges_kde(df, output_path):
     """
     plt.figure(figsize=(10, 5))
     for val, label in [("0", "Stayed"), ("1", "Churned")]:
-        sns.kdeplot(data=df[df["ChurnValue"] == val], x="MonthlyCharges",
+        sns.kdeplot(data=df[df["Churn Value"] == val], x="MonthlyCharges", 
                     fill=True, label=label, color=PALETTE[val], alpha=0.5)
     plt.title("Impatto dei Costi Mensili sul Churn")
     plt.legend()
@@ -128,7 +129,7 @@ def plot_tenure_group_rate(df, output_path):
     Churn Rate raggruppato per fasce di anzianità.
     Insight: Il churn cala drasticamente dopo il primo anno (0-12 mesi).
     """
-    df["Tenure Group"] = pd.cut(df["TenureMonths"].astype(float), bins=[0, 12, 24, 48, 72],
+    df["Tenure Group"] = pd.cut(df["Tenure Months"].astype(float), bins=[0, 12, 24, 48, 72],
                                  labels=["0-12", "12-24", "24-48", "48-72"])
     temp_df = df.copy()
     temp_df["ChurnValue"] = temp_df["ChurnValue"].astype(int)
@@ -146,10 +147,10 @@ def plot_scatter_tenure_charges(df, output_path):
     Insight: Identifica la 'Red Zone' (clienti nuovi ad alto costo).
     """
     plt.figure(figsize=(12, 8))
-    sns.scatterplot(data=df, x="TenureMonths", y="MonthlyCharges", hue="ChurnValue",
+    sns.scatterplot(data=df, x="TenureMonths", y="MonthlyCharges", hue="Churn Value", 
                     palette=PALETTE, alpha=0.4, s=30, edgecolor=None)
     plt.axvline(x=12, color='grey', linestyle='--', alpha=0.5)
-    plt.axhline(y=df["MonthlyCharges"].mean(), color='grey', linestyle='--', alpha=0.5)
+    plt.axhline(y=df["Monthly Charges"].mean(), color='grey', linestyle='--', alpha=0.5)
     plt.title("Analisi Congiunta: Tenure vs Monthly Charges")
     plt.savefig(output_path / "Scatter_Tenure_vs_Charges.png", dpi=300, bbox_inches='tight')
     plt.close()
@@ -246,7 +247,7 @@ def plot_economic_value_dist(df, output_path):
     Insight: Mostra la 'pancia' della spesa dei clienti che se ne vanno rispetto a chi resta.
     """
     plt.figure(figsize=(10, 6))
-    sns.violinplot(x="ChurnValue", y="AvgMonthlySpend", data=df, palette=PALETTE, inner="quart")
+    sns.violinplot(x="Churn Value", y="Avg Monthly Spend", data=df, palette=PALETTE, inner="quart")
     plt.title("Distribuzione Spesa Media Mensile per Status Churn")
     plt.savefig(output_path / "economic_value_distribution.png", dpi=300)
     plt.close()
@@ -259,7 +260,7 @@ def plot_charges_per_service_analysis(df, output_path):
     """
     plt.figure(figsize=(10, 5))
     for val, label in [("0", "Stayed"), ("1", "Churned")]:
-        sns.kdeplot(data=df[df["ChurnValue"] == val], x="ChargesPerService",
+        sns.kdeplot(data=df[df["Churn Value"] == val], x="Charges per Service", 
                     fill=True, label=label, color=PALETTE[val], alpha=0.5)
     plt.title("Efficienza del Costo: Charges per Service vs Churn")
     plt.xlabel("Costo medio per singolo servizio attivo ($)")
@@ -274,16 +275,16 @@ def plot_outliers_boxplots(df, output_path):
     """
     # Selezioniamo solo le numeriche che possono avere outlier reali
     cols_to_plot = [
-        'TenureMonths',
-        'MonthlyCharges',
-        'TotalCharges',
-        'AvgMonthlySpend',
-        'ChargesPerService'
+        'TenureMonths', 
+        'MonthlyCharges', 
+        'TotalCharges', 
+        'Avg Monthly Spend', 
+        'Charges per Service'
     ]
 
     # Assicuriamoci che TotalCharges sia numerico (spesso è object nei raw)
     df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
-
+    
     plt.figure(figsize=(16, 10))
     for i, col in enumerate(cols_to_plot, 1):
         plt.subplot(2, 3, i)

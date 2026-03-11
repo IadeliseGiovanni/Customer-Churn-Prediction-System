@@ -1,0 +1,49 @@
+Guida didattica al codice ML - Customer Churn
+
+1. Obiettivo
+Il progetto addestra un modello di churn che riceve dati cliente, applica lo stesso preprocessing usato in training e restituisce probabilita e classe (0/1).
+
+2. Flusso generale
+1. Preprocessing: carica il CSV raw e genera train_raw.csv e test_raw.csv.
+2. Training: addestra una Pipeline (preprocessing + XGBoost) e la salva su disco.
+3. Evaluazione: misura le metriche sul test set e salva report e grafici.
+4. Predizione: usa la Pipeline salvata per predire su un singolo record.
+
+3. Preprocessing (ml/preprocessing.py)
+1. Legge il file data/raw/Telco_customer_churn.csv.
+2. Mantiene i nomi originali delle colonne del CSV.
+3. Rimuove colonne non utili al modello.
+4. Converte il target "Churn Value" e "Gender" in 0/1.
+5. Converte le colonne numeriche principali lasciando NaN quando serve.
+6. Crea feature derivate: AvgMonthlySpend, NumServices, ChargesPerService.
+7. Esegue split stratificato train/test e salva i due CSV in data/processed.
+
+4. Training (ml/train_model.py)
+1. Carica data/processed/train_raw.csv.
+2. Separa X (feature) e y (Churn Value).
+3. Calcola scale_pos_weight per gestire lo sbilanciamento.
+4. Definisce il preprocessing con imputazione, scaling e one-hot encoding.
+5. Esegue Optuna per trovare i migliori iperparametri XGBoost.
+6. Allena la Pipeline finale e la salva in models/churn_pipeline_v1.joblib.
+7. Salva grafici di diagnostica overfitting e importanza feature.
+
+5. Valutazione (ml/evaluate.py)
+1. Carica la Pipeline e il test set.
+2. Calcola metriche: accuracy, precision, recall, f1, roc_auc.
+3. Salva metrics.csv e classification_report.txt.
+4. Produce la matrice di confusione.
+
+6. Predizione (ml/predict.py)
+1. Carica la Pipeline una sola volta per efficienza.
+2. Allinea le colonne in input allo schema del training.
+3. Aggiunge colonne mancanti con NA e calcola le feature derivate se servono.
+4. Restituisce probabilita di churn e classe finale (0/1).
+
+7. Esecuzione rapida (Windows)
+1. Preprocessing: py -3 ml/preprocessing.py
+2. Training: py -3 ml/train_model.py
+3. Valutazione: py -3 ml/evaluate.py
+4. Predizione demo: py -3 ml/predict.py
+
+8. Nota sui nomi delle colonne
+Il progetto utilizza i nomi originali del CSV (es. "Tenure Months", "Monthly Charges", "Total Charges", "Churn Value").

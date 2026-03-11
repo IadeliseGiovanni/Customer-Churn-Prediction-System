@@ -5,13 +5,13 @@ API_URL = "http://127.0.0.1:8000"
 
 st.title("Customer Churn Predictor")
 
-tenure = st.slider("Tenure",0,72)
+tenure = st.slider("Tenure Months", 0, 72)
 monthly = st.number_input("Monthly Charges")
 
 if st.button("Predict"):
     payload = {
-        "tenure":tenure,
-        "MonthlyCharges":monthly
+        "Tenure Months": tenure,
+        "Monthly Charges": monthly
     }
 
     r = requests.post(API_URL+"/predict", json=payload)
