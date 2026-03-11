@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Churn Prediction System</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Icone -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        <!-- SEZIONE INPUT -->
+        <div class="input-section">
+            <header>
+                <h1>Analisi Cliente</h1>
+                <p>Inserisci i dati per calcolare il rischio di abbandono.</p>
+            </header>
+
+            <form id="churnForm">
+                <!-- Gruppo 1: Anagrafica -->
+                <div class="form-group">
+                    <h3><span class="material-icons-round">person</span> Profilo</h3>
+                    <div class="grid-2">
+                        <label>Genere
+                            <select name="Gender"><option value="Male">Uomo</option><option value="Female">Donna</option></select>
+                        </label>
+                        <label>Senior Citizen
+                            <select name="SeniorCitizen"><option value="0">No</option><option value="1">Sì</option></select>
+                        </label>
+                        <label>Partner
+                            <select name="Partner"><option value="No">No</option><option value="Yes">Sì</option></select>
+                        </label>
+                        <label>Persone a Carico
+                            <select name="Dependents"><option value="No">No</option><option value="Yes">Sì</option></select>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Gruppo 2: Servizi -->
+                <div class="form-group">
+                    <h3><span class="material-icons-round">router</span> Servizi</h3>
+                    <div class="grid-2">
+                        <label>Internet Service
+                            <select name="InternetService">
+                                <option value="DSL">DSL</option>
+                                <option value="Fiber optic">Fibra Ottica</option>
+                                <option value="No">Nessuno</option>
+                            </select>
+                        </label>
+                        <label>Phone Service
+                            <select name="PhoneService"><option value="Yes">Sì</option><option value="No">No</option></select>
+                        </label>
+                    </div>
+                    
+                    <!-- Servizi aggiuntivi (Collapsible opzionale, qui messi in grid semplice) -->
+                    <div class="grid-3 small-text">
+                        <label>Sicurezza Online
+                            <select name="OnlineSecurity"><option value="No">No</option><option value="Yes">Sì</option><option value="No internet service">No Internet</option></select>
+                        </label>
+                        <label>Backup Online
+                            <select name="OnlineBackup"><option value="No">No</option><option value="Yes">Sì</option><option value="No internet service">No Internet</option></select>
+                        </label>
+                        <label>Device Protection
+                            <select name="DeviceProtection"><option value="No">No</option><option value="Yes">Sì</option><option value="No internet service">No Internet</option></select>
+                        </label>
+                        <label>Tech Support
+                            <select name="TechSupport"><option value="No">No</option><option value="Yes">Sì</option><option value="No internet service">No Internet</option></select>
+                        </label>
+                        <label>Streaming TV
+                            <select name="StreamingTV"><option value="No">No</option><option value="Yes">Sì</option><option value="No internet service">No Internet</option></select>
+                        </label>
+                        <label>Streaming Movies
+                            <select name="StreamingMovies"><option value="No">No</option><option value="Yes">Sì</option><option value="No internet service">No Internet</option></select>
+                        </label>
+                         <label>Multiple Lines
+                            <select name="MultipleLines"><option value="No">No</option><option value="Yes">Sì</option><option value="No phone service">No Phone</option></select>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Gruppo 3: Contratto e Costi -->
+                <div class="form-group">
+                    <h3><span class="material-icons-round">receipt_long</span> Contratto & Costi</h3>
+                    <label>Tipo Contratto
+                        <select name="Contract">
+                            <option value="Month-to-month">Mensile (Month-to-month)</option>
+                            <option value="One year">Annuale</option>
+                            <option value="Two year">Biennale</option>
+                        </select>
+                    </label>
+                    
+                    <div class="grid-2">
+                         <label>Paperless Billing
+                            <select name="PaperlessBilling"><option value="Yes">Sì</option><option value="No">No</option></select>
+                        </label>
+                        <label>Metodo Pagamento
+                            <select name="PaymentMethod">
+                                <option value="Electronic check">Electronic check</option>
+                                <option value="Mailed check">Mailed check</option>
+                                <option value="Bank transfer (automatic)">Bonifico</option>
+                                <option value="Credit card (automatic)">Carta di Credito</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <label>Anzianità (Mesi) <span id="tenureVal" style="float:right; color:var(--primary);">12</span></label>
+                    <input type="range" name="tenure" min="0" max="72" value="12" oninput="document.getElementById('tenureVal').innerText = this.value">
+
+                    <div class="grid-2">
+                        <label>Costo Mensile ($)
+                            <input type="number" name="MonthlyCharges" step="0.1" value="70.0">
+                        </label>
+                        <label>Costo Totale ($)
+                            <input type="number" name="TotalCharges" step="0.1" value="840.0">
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" id="predictBtn">Calcola Previsione</button>
+            </form>
+        </div>
+
+        <!-- SEZIONE RISULTATI -->
+        <div class="result-section">
+            <div id="loading" class="hidden">
+                <div class="spinner"></div>
+                <p>Analisi in corso...</p>
+            </div>
+
+            <div id="resultCard" class="hidden">
+                <h2>Risultato Predizione</h2>
+                
+                <!-- Grafico a Ciambella (CSS) -->
+                <div class="gauge-container">
+                    <div class="gauge-bg"></div>
+                    <div class="gauge-fill" id="gaugeFill"></div>
+                    <div class="gauge-cover">
+                        <span id="probPercent">0%</span>
+                        <small>Probabilità Churn</small>
+                    </div>
+                </div>
+
+                <div class="status-box" id="statusBox">
+                    <span class="material-icons-round" id="statusIcon">help</span>
+                    <h3 id="statusText">In attesa</h3>
+                </div>
+
+                <div class="details">
+                    <p>Il modello analizza i pattern di spesa e contratto per stimare se il cliente lascerà l'azienda.</p>
+                </div>
+            </div>
+            
+            <div id="placeholderResult">I risultati appariranno qui</div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
