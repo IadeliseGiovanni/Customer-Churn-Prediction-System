@@ -1,4 +1,4 @@
-:root {
+﻿:root {
     --bg: #f4f7f6;
     --surface: #ffffff;
     --primary: #4f46e5;
@@ -20,14 +20,14 @@ body { background-color: var(--bg); color: var(--text); display: flex; justify-c
     gap: 2rem;
     max-width: 1200px;
     width: 100%;
-    background: var(--surface);
-    border-radius: 1rem;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-    overflow: hidden;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+    align-items: flex-start;
 }
-
 /* Left Section: Inputs */
-.input-section { flex: 2; padding: 2rem; min-width: 350px; border-right: 1px solid var(--border); }
+.input-section { flex: 2; padding: 2rem; min-width: 350px; background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
 
 header h1 { font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--primary); }
 header p { color: var(--text-light); margin-bottom: 2rem; }
@@ -58,9 +58,18 @@ button:active { transform: scale(0.98); }
 
 /* Right Section: Results */
 .result-section {
-    flex: 1; padding: 2rem; min-width: 300px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    background: #fafafa; position: relative;
+    flex: 1;
+    padding: 2rem;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    position: relative;
 }
 
 #placeholderResult { color: var(--text-light); font-style: italic; }
@@ -114,5 +123,131 @@ button:active { transform: scale(0.98); }
 
 @media (max-width: 768px) {
     .container { flex-direction: column; }
-    .input-section { border-right: none; border-bottom: 1px solid var(--border); }
 }
+/* Plots gallery */
+.result-section { justify-content: flex-start; align-items: stretch; }
+
+.plots-section { margin-top: 1.5rem; width: 100%; }
+.plots-header { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.75rem; }
+.plots-header h2 { font-size: 1.1rem; color: var(--text); }
+
+.secondary-btn {
+    width: auto;
+    padding: 0.6rem 0.9rem;
+    background: white;
+    color: var(--primary);
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+.secondary-btn:hover { background: #f9fafb; }
+
+.plots-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+}
+
+.plot-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 0.8rem;
+    overflow: hidden;
+}
+
+.plot-card img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.plot-card figcaption {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+.plot-missing { display: none; }
+
+.plots-hint { margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-light); }
+
+/* Admin login */
+.login-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(6px);
+    z-index: 1000;
+    padding: 2rem;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+
+.login-card h1 {
+    font-size: 1.4rem;
+    color: var(--text);
+    margin-bottom: 0.25rem;
+}
+
+.login-card p {
+    color: var(--text-light);
+    margin-bottom: 1rem;
+}
+
+.login-card label { margin-bottom: 0.75rem; }
+
+.login-card input {
+    width: 100%;
+    padding: 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    background: #f9fafb;
+    font-size: 1rem;
+}
+
+.login-card input:focus {
+    border-color: var(--primary);
+    outline: none;
+    background: white;
+}
+
+.login-error {
+    margin-top: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.6rem;
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: var(--danger);
+    font-size: 0.9rem;
+}
+
+.logout-btn {
+    margin-top: 0.75rem;
+    width: auto;
+}
+
+/* Header layout */
+.app-header .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.app-header p { margin-bottom: 1.5rem; }
+
+.logout-btn { margin: 0; }
+
+

@@ -363,3 +363,77 @@ if __name__ == "__main__":
     plot_outliers_boxplots(df, OUT_DIR)
     
     print(f"Analisi completata. Grafici salvati in: {OUT_DIR}")
+
+
+def generate_all_plots(root_path: Path | str) -> None:
+    """Wrapper usato dal backend per generare i plot usando i CSV processed.
+
+    Non riscrive le funzioni di plotting esistenti: crea alias di colonne (con e senza spazi)
+    per mantenere compatibilita con le funzioni gia presenti in questo modulo.
+    """
+
+    root_path = Path(root_path)
+    proc_dir = root_path / "data" / "processed"
+    out_dir = root_path / "outputs" / "plots"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    df_train = pd.read_csv(proc_dir / "train_raw.csv")
+    df_test = pd.read_csv(proc_dir / "test_raw.csv")
+    df = pd.concat([df_train, df_test], axis=0, ignore_index=True)
+
+    # Alias colonne senza spazi -> con spazi (per compatibilita con funzioni esistenti)
+    alias_map = {
+        "ChurnValue": "Churn Value",
+        "TenureMonths": "Tenure Months",
+        "MonthlyCharges": "Monthly Charges",
+        "TotalCharges": "Total Charges",
+        "InternetService": "Internet Service",
+        "PaymentMethod": "Payment Method",
+        "PaperlessBilling": "Paperless Billing",
+        "SeniorCitizen": "Senior Citizen",
+        "PhoneService": "Phone Service",
+        "MultipleLines": "Multiple Lines",
+        "OnlineSecurity": "Online Security",
+        "OnlineBackup": "Online Backup",
+        "DeviceProtection": "Device Protection",
+        "TechSupport": "Tech Support",
+        "StreamingTV": "Streaming TV",
+        "StreamingMovies": "Streaming Movies",
+        "AvgMonthlySpend": "Avg Monthly Spend",
+        "ChargesPerService": "Charges per Service",
+    }
+
+    for src, dst in alias_map.items():
+        if src in df.columns and dst not in df.columns:
+            df[dst] = df[src]
+
+    # Le funzioni spesso si aspettano churn come stringa ("0"/"1") per il palette.
+    if "Churn Value" in df.columns:
+        df["Churn Value"] = df["Churn Value"].astype(str)
+    if "ChurnValue" in df.columns:
+        df["ChurnValue"] = df["ChurnValue"].astype(str)
+
+    # Chiamata alle funzioni di plot disponibili; skip impliciti se mancano colonne.
+    safe_calls = [
+        plot_churn_distribution,
+        plot_tenure_kde,
+        plot_monthly_charges_kde,
+        plot_contract_churn,
+        plot_services_and_payment,
+        plot_tenure_group_rate,
+        plot_scatter_tenure_charges,
+        plot_num_services_count,
+        plot_full_correlation_matrix,
+        plot_demographic_analysis,
+        plot_economic_value_dist,
+        plot_charges_per_service_analysis,
+        plot_outliers_boxplots,
+        plot_churn_heatmap_grid,
+    ]
+
+    for fn in safe_calls:
+        try:
+            fn(df, out_dir)
+        except Exception:
+            # Non blocchiamo l'endpoint se un singolo plot non e generabile con le colonne presenti.
+            continue

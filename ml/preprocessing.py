@@ -1,159 +1,146 @@
+﻿from __future__ import annotations
+
 from pathlib import Path
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 from sklearn.model_selection import train_test_split
 
-# --- CONFIGURAZIONE PERCORSI ---
+# Standard colonne (senza spazi) usato da training/predizione/API.
+TARGET_COL = "ChurnValue"
+
+# Mapping utile per trasformare label di churn in 0/1.
+CHURN_MAP = {"Yes": 1, "No": 0, "Churned": 1, "Stayed": 0, 1: 1, 0: 0}
+
 ROOT = Path(__file__).resolve().parents[1]
 RAW_FILE = ROOT / "data" / "raw" / "Telco_customer_churn.csv"
 PROC_DIR = ROOT / "data" / "processed"
 PROC_DIR.mkdir(parents=True, exist_ok=True)
 
-def clean_raw(df: pd.DataFrame, include_log_totalcharges: bool = False) -> pd.DataFrame:
-    """Esegue la pulizia e il feature engineering ottimizzato."""
+
+def clean_raw(
+    df: pd.DataFrame,
+    include_log_totalcharges: bool = False,
+    keep_customer_id: bool = False,
+) -> pd.DataFrame:
+    """Pulisce il dataset e genera feature usando uno schema senza spazi."""
     df = df.copy()
-    
-    # 1. PULIZIA NOMI E RIMOZIONE COLONNE (drop dopo il feature engineering)
-    df.columns = df.columns.str.strip()
+
+    # Normalizza nomi colonna rimuovendo spazi: es. "Total Charges" -> "TotalCharges".
+    df.columns = df.columns.str.strip().str.replace(" ", "", regex=False)
+
     cols_to_drop = [
-        "CustomerID", "Count", "Country", "State", "City", "Lat Long",
-        "Zip Code", "Churn Reason", "Churn Score", "Churn Label", "CLTV",
-        "Latitude", "Longitude"
+        "CustomerID",
+        "Count",
+        "Country",
+        "State",
+        "City",
+        "LatLong",
+        "ZipCode",
+        "ChurnReason",
+        "ChurnScore",
+        "ChurnLabel",
+        "CLTV",
+        "Latitude",
+        "Longitude",
     ]
-    # 2. DIGITALIZZAZIONE (MAPPING MIRATO)
-    # Identifichiamo dinamicamente il target
-    #target = next((c for c in df.columns if "churn" in c.lower()), "Churn Value")
-    #df.rename(columns={target: "Churn Value"}, inplace=True)
+    if keep_customer_id and "CustomerID" in cols_to_drop:
+        cols_to_drop.remove("CustomerID")
 
-    # Mapping mirato su target e gender
-    churn_map = {"Yes": 1, "No": 0, "Churned": 1, "Stayed": 0}
-    if "Churn Value" in df.columns:
-        df["Churn Value"] = df["Churn Value"].replace(churn_map)
-    if "Gender" in df.columns:
-        df["Gender"] = df["Gender"].replace({"Female": 1, "Male": 0})
-    print("🎯 #Step2: Digitalizzazione variabili (Target, Gender e Servizi)")
+    # Target -> 0/1
+    target = next((c for c in df.columns if "churn" in c.lower()), TARGET_COL)
+    if target in df.columns and target != TARGET_COL:
+        df.rename(columns={target: TARGET_COL}, inplace=True)
 
-    # 3. CONVERSIONE NUMERICA COERENTE
-    num_cols = ["Total Charges", "Tenure Months", "Monthly Charges"]
-    for col in num_cols:
+    if TARGET_COL in df.columns:
+        df[TARGET_COL] = df[TARGET_COL].replace(CHURN_MAP)
+
+    # SeniorCitizen: il raw spesso e una stringa Yes/No, ma la UI usa 0/1.
+    if "SeniorCitizen" in df.columns:
+        df["SeniorCitizen"] = df["SeniorCitizen"].replace({"Yes": 1, "No": 0, "0": 0, "1": 1})
+        df["SeniorCitizen"] = pd.to_numeric(df["SeniorCitizen"], errors="coerce")
+
+    # Numeriche
+    for col in ["TotalCharges", "TenureMonths", "MonthlyCharges"]:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    # 4. FEATURE ENGINEERING (LOGICA DI BUSINESS)
-    print("🛠️ #Step3: Generazione nuove Feature")
-    # Calcolo spesa media evitando divisione per zero
-    df["AvgMonthlySpend"] = df["Total Charges"] / df["Tenure Months"].replace(0, pd.NA)
+    # Feature engineering
+    if "TotalCharges" in df.columns and "TenureMonths" in df.columns:
+        df["AvgMonthlySpend"] = df["TotalCharges"] / df["TenureMonths"].replace(0, 1)
 
-    # Calcolo NumServices (più rapido dopo la digitalizzazione)
     service_cols = [
-        "Multiple Lines", "Online Security", "Online Backup", "Device Protection",
-        "Tech Support", "Streaming TV", "Streaming Movies", "Phone Service"
+        "MultipleLines",
+        "OnlineSecurity",
+        "OnlineBackup",
+        "DeviceProtection",
+        "TechSupport",
+        "StreamingTV",
+        "StreamingMovies",
+        "PhoneService",
     ]
-    
+
     available_services = [c for c in service_cols if c in df.columns]
     service_map = {"Yes": 1, "No": 0, "No internet service": 0, "No phone service": 0}
-    service_numeric = (
-        df[available_services]
-        .replace(service_map)
-        .apply(pd.to_numeric, errors="coerce")
-        .fillna(0)
-    )
-    df["NumServices"] = service_numeric.sum(axis=1)
-    # df["ChargesPerService"] = df["Monthly Charges"] / (df["NumServices"] + 1)
 
-    # Colonne aggregate: bundle di servizi (manteniamo anche le colonne originali)
-    # support_cols = [c for c in ["Online Security", "Online Backup", "Device Protection", "Tech Support"] if c in service_numeric.columns]
-    # if support_cols:
-    #     df["SupportBundleCount"] = service_numeric[support_cols].sum(axis=1)
+    if available_services:
+        service_numeric = (
+            df[available_services]
+            .replace(service_map)
+            .apply(pd.to_numeric, errors="coerce")
+            .fillna(0)
+        )
+        df["NumServices"] = service_numeric.sum(axis=1)
 
-    streaming_cols = [c for c in ["Streaming TV", "Streaming Movies"] if c in service_numeric.columns]
-    if streaming_cols:
-        df["StreamingBundleCount"] = service_numeric[streaming_cols].sum(axis=1)
+        streaming_cols = [c for c in ["StreamingTV", "StreamingMovies"] if c in service_numeric.columns]
+        if streaming_cols:
+            df["StreamingBundleCount"] = service_numeric[streaming_cols].sum(axis=1)
 
-    phone_cols = [c for c in ["Phone Service", "Multiple Lines"] if c in service_numeric.columns]
-    if phone_cols:
-        df["PhoneBundleCount"] = service_numeric[phone_cols].sum(axis=1)
+        phone_cols = [c for c in ["PhoneService", "MultipleLines"] if c in service_numeric.columns]
+        if phone_cols:
+            df["PhoneBundleCount"] = service_numeric[phone_cols].sum(axis=1)
 
-    if "Internet Service" in df.columns:
-        df["HasInternet"] = (df["Internet Service"].str.strip().str.lower() != "no").astype(int)
+    if "MonthlyCharges" in df.columns and "NumServices" in df.columns:
+        df["ChargesPerService"] = df["MonthlyCharges"] / (df["NumServices"] + 1)
 
-    # Assegno un punteggio di fedelta basato su contratto e durata
-    # if "Contract" in df.columns and "Tenure Months" in df.columns:
-    #     contract_weights = {"Month-to-month": 1.0, "One year": 1.5, "Two year": 2.0}
-    #     df["Loyalty_Index"] = pd.to_numeric(df["Tenure Months"], errors="coerce") * df["Contract"].map(contract_weights)
+    if "InternetService" in df.columns:
+        df["HasInternet"] = (df["InternetService"].astype(str).str.strip().str.lower() != "no").astype(int)
 
-    if "Payment Method" in df.columns:
-        df["Is_Electronic_Check"] = (df["Payment Method"].str.strip().str.lower() == "electronic check").astype(int)
-    if include_log_totalcharges and "Total Charges" in df.columns:
-        df["Log_TotalCharges"] = np.log1p(pd.to_numeric(df["Total Charges"], errors="coerce"))
-        
+    if "PaymentMethod" in df.columns:
+        df["Is_Electronic_Check"] = (
+            df["PaymentMethod"].astype(str).str.strip().str.lower() == "electronic check"
+        ).astype(int)
+
+    if include_log_totalcharges and "TotalCharges" in df.columns:
+        df["Log_TotalCharges"] = np.log1p(pd.to_numeric(df["TotalCharges"], errors="coerce"))
+
     df.drop(columns=[c for c in cols_to_drop if c in df.columns], inplace=True)
-    print("#Step1: Pulizia intestazioni e rimozione colonne irrilevanti")
     return df.drop_duplicates()
 
-def split_save(df: pd.DataFrame):
-    """Gestisce lo split dei dati e il salvataggio fisico."""
-    X = df.drop(columns=["Churn Value"])
-    y = df["Churn Value"]
 
-    # Split stratificato per mantenere le proporzioni del Churn
+def split_save(df: pd.DataFrame) -> None:
+    if TARGET_COL not in df.columns:
+        raise KeyError(f"Target column '{TARGET_COL}' not found after preprocessing")
+
+    X = df.drop(columns=[TARGET_COL])
+    y = df[TARGET_COL]
+
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, stratify=y, random_state=42
     )
 
-    # Salvataggio CSV
     pd.concat([X_train, y_train], axis=1).to_csv(PROC_DIR / "train_raw.csv", index=False)
     pd.concat([X_test, y_test], axis=1).to_csv(PROC_DIR / "test_raw.csv", index=False)
-    print(f"💾 #Step4: File salvati con successo in {PROC_DIR}")
-    
-    # --- VERIFICA SUL FILE SALVATO (TRAIN_RAW) ---
-    print(f"\n🧪 #CHECK: Validazione dati su {'train_raw.csv'}")
-    check_df = pd.read_csv(PROC_DIR / "train_raw.csv")
 
-    print("\n📊 1. INFO - Verifica tipi e non-nulli:")
-    check_df.info()
 
-    print("\n📈 2. DESCRIBE - Statistiche ogni singola colonna:")
-    # .T per visualizzare comodamente tutte le feature (comprese quelle nuove)
-    print(check_df.describe().T)
+def main() -> None:
+    if not RAW_FILE.exists():
+        raise FileNotFoundError(f"Raw file not found: {RAW_FILE}")
 
-    print("\n👀 3. HEAD - Anteprima record digitalizzati:")
-    print(check_df.head())
-    
-    print("PROC_DIR:", PROC_DIR)
-    print("Columns in file:", [repr(c) for c in check_df.columns if "Streaming" in c])
+    df = pd.read_csv(RAW_FILE)
+    df_processed = clean_raw(df)
+    split_save(df_processed)
 
-    
-    print("\n" + "—"*50)
-
-def main():
-    print(f"🚀 #START: Processing {RAW_FILE.name}")
-    try:
-        if not RAW_FILE.exists():
-            print(f"❌ Errore: File non trovato!")
-            return
-            
-        df = pd.read_csv(RAW_FILE)
-        df_processed = clean_raw(df)
-        split_save(df_processed)
-        
-        print("\n" + "="*30)
-        print(f"✅ DATASET PRONTO: {df_processed.shape[0]} righe, {df_processed.shape[1]} colonne")
-        print("="*30)
-        
-    except Exception as e:
-        print(f"❌ #ERROR: {e}")
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
-
