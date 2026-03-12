@@ -1,0 +1,21 @@
+GUIDA RAPIDA GRAFICI CHURN
+========================================
+
+GRAFICI PRIORITARI (consigliati in esposizione):
+- churn_distribution_percent.png: KPI base: quantifica il fenomeno churn e lo sbilanciamento classi.
+- Churn_Rate_by_Contract_Type.png: Insight azionabile: il tipo di contratto guida la strategia di retention.
+- churn_rate_grouped_by_tenure_group.png: Mostra quando avviene il rischio (fase iniziale della relazione cliente).
+- Churn_Heatmap_Grid.png: Vista sintetica rischio costo/anzianità, utile per prioritizzare campagne.
+- InternetServicevsChurn.png: Segmentazione commerciale: individua offerte/servizi ad alto rischio.
+- PaymentMethodvsChurn.png: Segmentazione pagamenti: evidenzia cluster con maggiore churn.
+- Scatter_Tenure_vs_Charges.png: Utile in esposizione per raccontare la 'red zone' clienti ad alto rischio.
+- map_churn_distribution.png: Geografia del churn: supporta eventuali azioni territoriali (da dati raw).
+
+GRAFICI SECONDARI / DA SCARTARE in executive summary:
+- full_correlation_matrix_pearson.png: Molto tecnico e denso: utile in appendice, non in executive summary.
+- boxplots_outliers.png: Grafico di data-quality, meno rilevante per decisioni business immediate.
+- charges_per_service_kde.png: Derivata utile solo se si discute pricing avanzato.
+- demographic_churn.png: Può essere sensibile/meno azionabile senza una strategia segment-specific.
+- economic_value_distribution.png: Buono ma ridondante se già si mostrano costi+tenure+contract.
+
+Nota: i grafici secondari restano utili in appendice tecnica o sessioni di approfondimento.
