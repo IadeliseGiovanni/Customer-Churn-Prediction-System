@@ -68,9 +68,9 @@ proba = pipeline.predict_proba(X_test)[:, 1]
 # Calcolo metriche
 metrics = {
     "accuracy": accuracy_score(y_test, preds),
-    "precision": precision_score(y_test, preds),
-    "recall": recall_score(y_test, preds),
-    "f1": f1_score(y_test, preds),
+    "precision": precision_score(y_test, preds, zero_division=0),
+    "recall": recall_score(y_test, preds, zero_division=0),
+    "f1": f1_score(y_test, preds, zero_division=0),
     "roc_auc": roc_auc_score(y_test, proba),
 }
 
@@ -86,7 +86,7 @@ pd.DataFrame([metrics]).to_csv(OUT_DIR / "metrics.csv", index=False)
 print(f"Saved metrics to: {OUT_DIR / 'metrics.csv'}")
 
 # Report più dettagliato per classe
-report = classification_report(y_test, preds)
+report = classification_report(y_test, preds, digits=4, zero_division=0)
 (OUT_DIR / "classification_report.txt").write_text(report, encoding="utf-8")
 
 # Matrice di confusione: mostra FP/FN in modo immediato
@@ -94,4 +94,4 @@ ConfusionMatrixDisplay.from_estimator(pipeline, X_test, y_test)
 plt.title("Matrice di Confusione - Errori del modello")
 #plt.show()
 plt.savefig(MODELS_DIR / "confusion_matrix.png")
-
+plt.close()

@@ -220,7 +220,20 @@ model_es.fit(
     verbose=False,
 )
 
+best_iteration = getattr(model_es, "best_iteration", None)
+if best_iteration is not None:
+    model_params["n_estimators"] = int(best_iteration) + 1
+    print(f"Early stopping -> n_estimators finale: {model_params['n_estimators']}")
+
 print("Training completed.")
+
+# Aggiorno pipeline finale con il numero di alberi stimato dall'early stopping
+pipeline = Pipeline(
+    [
+        ("preprocessor", preprocessor),
+        ("model", XGBClassifier(**model_params)),
+    ]
+)
 
 # Fit finale della pipeline completa su tutto il dataset
 # così la pipeline salvata è davvero fitted e riutilizzabile

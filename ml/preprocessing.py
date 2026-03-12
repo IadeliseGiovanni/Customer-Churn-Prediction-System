@@ -9,10 +9,16 @@ RAW_FILE = ROOT / "data" / "raw" / "Telco_customer_churn.csv"
 PROC_DIR = ROOT / "data" / "processed"
 PROC_DIR.mkdir(parents=True, exist_ok=True)
 
-def clean_raw(df: pd.DataFrame, include_log_totalcharges: bool = False) -> pd.DataFrame:
-    """Esegue la pulizia e il feature engineering ottimizzato."""
+
+def clean_raw(
+    df: pd.DataFrame,
+    include_log_totalcharges: bool = False,
+    use_gender: bool = True,
+    use_total_charges: bool = True,
+) -> pd.DataFrame:
+    """Esegue la pulizia e il feature engineering ottimizzato (v2 configurabile)."""
     df = df.copy()
-    
+
     # 1. PULIZIA NOMI E RIMOZIONE COLONNE (drop dopo il feature engineering)
     df.columns = df.columns.str.strip()
     cols_to_drop = [
@@ -20,17 +26,18 @@ def clean_raw(df: pd.DataFrame, include_log_totalcharges: bool = False) -> pd.Da
         "Zip Code", "Churn Reason", "Churn Score", "Churn Label", "CLTV",
         "Latitude", "Longitude"
     ]
-    # 2. DIGITALIZZAZIONE (MAPPING MIRATO)
-    # Identifichiamo dinamicamente il target
-    #target = next((c for c in df.columns if "churn" in c.lower()), "Churn Value")
-    #df.rename(columns={target: "Churn Value"}, inplace=True)
 
-    # Mapping mirato su target e gender
+    # 2. DIGITALIZZAZIONE (MAPPING MIRATO)
     churn_map = {"Yes": 1, "No": 0, "Churned": 1, "Stayed": 0}
     if "Churn Value" in df.columns:
         df["Churn Value"] = df["Churn Value"].replace(churn_map)
+
     if "Gender" in df.columns:
-        df["Gender"] = df["Gender"].replace({"Female": 1, "Male": 0})
+        if use_gender:
+            df["Gender"] = df["Gender"].replace({"Female": 1, "Male": 0})
+        else:
+            cols_to_drop.append("Gender")
+
     print("🎯 #Step2: Digitalizzazione variabili (Target, Gender e Servizi)")
 
     # 3. CONVERSIONE NUMERICA COERENTE
@@ -41,15 +48,17 @@ def clean_raw(df: pd.DataFrame, include_log_totalcharges: bool = False) -> pd.Da
 
     # 4. FEATURE ENGINEERING (LOGICA DI BUSINESS)
     print("🛠️ #Step3: Generazione nuove Feature")
-    # Calcolo spesa media evitando divisione per zero
-    df["AvgMonthlySpend"] = df["Total Charges"] / df["Tenure Months"].replace(0, pd.NA)
 
-    # Calcolo NumServices (più rapido dopo la digitalizzazione)
+    # Calcolo spesa media evitando divisione per zero
+    if {"Total Charges", "Tenure Months"}.issubset(df.columns):
+        df["AvgMonthlySpend"] = df["Total Charges"] / df["Tenure Months"].replace(0, pd.NA)
+
+    # Calcolo NumServices
     service_cols = [
         "Multiple Lines", "Online Security", "Online Backup", "Device Protection",
         "Tech Support", "Streaming TV", "Streaming Movies", "Phone Service"
     ]
-    
+
     available_services = [c for c in service_cols if c in df.columns]
     service_map = {"Yes": 1, "No": 0, "No internet service": 0, "No phone service": 0}
     service_numeric = (
@@ -59,16 +68,12 @@ def clean_raw(df: pd.DataFrame, include_log_totalcharges: bool = False) -> pd.Da
         .fillna(0)
     )
     df["NumServices"] = service_numeric.sum(axis=1)
-    # df["ChargesPerService"] = df["Monthly Charges"] / (df["NumServices"] + 1)
 
-    # Colonne aggregate: bundle di servizi (manteniamo anche le colonne originali)
-    # support_cols = [c for c in ["Online Security", "Online Backup", "Device Protection", "Tech Support"] if c in service_numeric.columns]
-    # if support_cols:
-    #     df["SupportBundleCount"] = service_numeric[support_cols].sum(axis=1)
-
+    # Manteniamo solo la colonna aggregata streaming
     streaming_cols = [c for c in ["Streaming TV", "Streaming Movies"] if c in service_numeric.columns]
     if streaming_cols:
         df["StreamingBundleCount"] = service_numeric[streaming_cols].sum(axis=1)
+        cols_to_drop.extend(streaming_cols)
 
     phone_cols = [c for c in ["Phone Service", "Multiple Lines"] if c in service_numeric.columns]
     if phone_cols:
@@ -77,19 +82,22 @@ def clean_raw(df: pd.DataFrame, include_log_totalcharges: bool = False) -> pd.Da
     if "Internet Service" in df.columns:
         df["HasInternet"] = (df["Internet Service"].str.strip().str.lower() != "no").astype(int)
 
-    # Assegno un punteggio di fedelta basato su contratto e durata
-    # if "Contract" in df.columns and "Tenure Months" in df.columns:
-    #     contract_weights = {"Month-to-month": 1.0, "One year": 1.5, "Two year": 2.0}
-    #     df["Loyalty_Index"] = pd.to_numeric(df["Tenure Months"], errors="coerce") * df["Contract"].map(contract_weights)
-
     if "Payment Method" in df.columns:
-        df["Is_Electronic_Check"] = (df["Payment Method"].str.strip().str.lower() == "electronic check").astype(int)
+        df["Is_Electronic_Check"] = (
+            df["Payment Method"].str.strip().str.lower() == "electronic check"
+        ).astype(int)
+
     if include_log_totalcharges and "Total Charges" in df.columns:
         df["Log_TotalCharges"] = np.log1p(pd.to_numeric(df["Total Charges"], errors="coerce"))
-        
+
+    # Toggle per tenere/rimuovere Total Charges
+    if not use_total_charges and "Total Charges" in df.columns:
+        cols_to_drop.append("Total Charges")
+
     df.drop(columns=[c for c in cols_to_drop if c in df.columns], inplace=True)
     print("#Step1: Pulizia intestazioni e rimozione colonne irrilevanti")
     return df.drop_duplicates()
+
 
 def split_save(df: pd.DataFrame):
     """Gestisce lo split dei dati e il salvataggio fisico."""
@@ -105,7 +113,7 @@ def split_save(df: pd.DataFrame):
     pd.concat([X_train, y_train], axis=1).to_csv(PROC_DIR / "train_raw.csv", index=False)
     pd.concat([X_test, y_test], axis=1).to_csv(PROC_DIR / "test_raw.csv", index=False)
     print(f"💾 #Step4: File salvati con successo in {PROC_DIR}")
-    
+
     # --- VERIFICA SUL FILE SALVATO (TRAIN_RAW) ---
     print(f"\n🧪 #CHECK: Validazione dati su {'train_raw.csv'}")
     check_df = pd.read_csv(PROC_DIR / "train_raw.csv")
@@ -114,46 +122,45 @@ def split_save(df: pd.DataFrame):
     check_df.info()
 
     print("\n📈 2. DESCRIBE - Statistiche ogni singola colonna:")
-    # .T per visualizzare comodamente tutte le feature (comprese quelle nuove)
     print(check_df.describe().T)
 
     print("\n👀 3. HEAD - Anteprima record digitalizzati:")
     print(check_df.head())
-    
+
     print("PROC_DIR:", PROC_DIR)
     print("Columns in file:", [repr(c) for c in check_df.columns if "Streaming" in c])
 
-    
-    print("\n" + "—"*50)
+    print("\n" + "—" * 50)
+
 
 def main():
     print(f"🚀 #START: Processing {RAW_FILE.name}")
     try:
         if not RAW_FILE.exists():
-            print(f"❌ Errore: File non trovato!")
+            print("❌ Errore: File non trovato!")
             return
-            
+
+        # Config v2: cambia qui i toggle
+        use_gender = False
+        use_total_charges = True
+
         df = pd.read_csv(RAW_FILE)
-        df_processed = clean_raw(df)
+        df_processed = clean_raw(
+            df,
+            include_log_totalcharges=False,
+            use_gender=use_gender,
+            use_total_charges=use_total_charges,
+        )
         split_save(df_processed)
-        
-        print("\n" + "="*30)
+
+        print("\n" + "=" * 30)
         print(f"✅ DATASET PRONTO: {df_processed.shape[0]} righe, {df_processed.shape[1]} colonne")
-        print("="*30)
-        
+        print(f"⚙️ Config -> use_gender={use_gender}, use_total_charges={use_total_charges}")
+        print("=" * 30)
+
     except Exception as e:
         print(f"❌ #ERROR: {e}")
 
+
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
-

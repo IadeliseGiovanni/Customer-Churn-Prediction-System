@@ -15,7 +15,7 @@ Qui:
 - ricaviamo le colonne attese dal preprocessor salvato nella pipeline
 - allineiamo i nomi alle colonne attese (normalizzazione semplice)
 - aggiungiamo le colonne mancanti come NA (gli imputers le gestiranno)
-- calcoliamo le feature derivate usate nel training (AvgMonthlySpend, NumServices, ChargesPerService)
+- calcoliamo le feature derivate usate nel training (AvgMonthlySpend, NumServices)
 
 Soglia di decisione
 -------------------
@@ -60,6 +60,20 @@ def predict_record(record: dict, threshold: float | None = None) -> dict:
     # 2) Normalizzazione nomi (alcuni input UI/API usano nomi diversi dal training)
     rename_map = {
         "tenure": "Tenure Months",
+        "SeniorCitizen": "Senior Citizen",
+        "PhoneService": "Phone Service",
+        "MultipleLines": "Multiple Lines",
+        "InternetService": "Internet Service",
+        "OnlineSecurity": "Online Security",
+        "OnlineBackup": "Online Backup",
+        "DeviceProtection": "Device Protection",
+        "TechSupport": "Tech Support",
+        "StreamingTV": "Streaming TV",
+        "StreamingMovies": "Streaming Movies",
+        "PaperlessBilling": "Paperless Billing",
+        "PaymentMethod": "Payment Method",
+        "MonthlyCharges": "Monthly Charges",
+        "TotalCharges": "Total Charges",
     }
     rename_cols = {k: v for k, v in rename_map.items() if k in df.columns and v not in df.columns}
     if rename_cols:
@@ -113,12 +127,6 @@ def predict_record(record: dict, threshold: float | None = None) -> dict:
                 )
                 df["NumServices"] = service_numeric.sum(axis=1)
                 print("[predict] computed feature: NumServices")
-
-        if "ChargesPerService" in expected_cols and "ChargesPerService" not in df.columns:
-            if "Monthly Charges" in df.columns and "NumServices" in df.columns:
-                monthly = pd.to_numeric(df["Monthly Charges"], errors="coerce")
-                df["ChargesPerService"] = monthly / (df["NumServices"] + 1)
-                print("[predict] computed feature: ChargesPerService")
 
         # Conversione numeriche: spesso UI/API inviano numeri come stringhe.
         num_cols: list[str] = []
@@ -176,10 +184,3 @@ if __name__ == "__main__":
     print("[predict] Running sample prediction...")
     result = predict_record(sample_record, threshold=0.6)
     print(f"[predict] result={result}")
-
-
-
-
-
-
-
