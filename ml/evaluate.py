@@ -1,22 +1,10 @@
-﻿"""Evaluation script.
+"""Model evaluation utilities.
 
-Scopo del modulo
-----------------
-Valuta il modello salvato da ml/train_model.py sul test set prodotto da ml/preprocessing.py.
-
-Input
------
-- models/churn_pipeline_v1.joblib
-- data/processed/test_raw.csv (colonna target "ChurnValue")
-
-Output
-------
-- outputs/metrics.csv: metriche riassuntive
-- outputs/classification_report.txt: report dettagliato per classe
-- outputs/confusion_matrix.png
+Obiettivo:
+- Caricare modello/i e test set
+- Calcolare metriche coerenti
+- Salvare report e matrici di confusione
 """
-
-from __future__ import annotations
 
 from pathlib import Path
 
