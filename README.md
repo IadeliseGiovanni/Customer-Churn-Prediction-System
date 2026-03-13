@@ -189,10 +189,10 @@ POST /predict\
 POST /preprocess\
 POST /train\
 POST /evaluate\
-POST /generate-plots
+GET /plots
 
 Frontend,
-frontend/dashboard.py
+frontend/html, js e css
 
 Features - Single prediction via API - Visualization support for churn probability - ML pipeline trigger from backend endpoints
 
