@@ -140,4 +140,76 @@ Al termine dell'esecuzione, troverai nella cartella `outputs/`:
 *   **Core:** Python 3.10+, Pandas, NumPy
 *   **ML:** Scikit-learn, XGBoost, Optuna, Joblib
 *   **Vis:** Matplotlib, Seaborn
-*   **Web:** FastAPI, Streamlit, Pydantic
+*   **Web:** FastAPI, HTML, CSS JS, Pydantic
+*   
+
+Team Roles,
+Giovanni --- Data Engineer,
+Files,
+utils/data_loader.py\
+ml/preprocessing.py
+
+Responsibilities,
+Load the raw dataset,
+Clean missing values,
+Convert column formats,
+Remove duplicates,
+Split dataset into train/test,
+
+Output,
+data/processed/train_raw.csv\
+data/processed/test_raw.csv
+
+------------------------------------------------------------------------
+
+Davide --- Machine Learning Engineer,
+Files,
+ml/train_model.py\
+ml/evaluate.py\
+ml/predict.py
+
+Responsibilities,
+Build ML pipeline,
+Train XGBoost model tuned with Optuna (F2-oriented),
+Evaluate model performance,
+Save trained model,
+Implement prediction functions,
+
+Output,
+models/churn_pipeline_v1.joblib\
+outputs/metrics.csv\
+outputs/classification_report.txt
+
+------------------------------------------------------------------------
+
+Gabriele --- Backend + Frontend Developer,
+Backend,
+backend/api.py
+
+Endpoints GET /\
+POST /predict\
+POST /preprocess\
+POST /train\
+POST /evaluate\
+POST /generate-plots
+
+Frontend,
+frontend/dashboard.py
+
+Features - Single prediction via API - Visualization support for churn probability - ML pipeline trigger from backend endpoints
+
+------------------------------------------------------------------------
+
+Elisabetta --- Data Visualization & Analysis,
+Files,
+analysis/eda.py\
+analysis/plots.py
+
+Responsibilities,
+Exploratory Data Analysis,
+Create data visualizations,
+Provide insights about churn patterns,
+
+Charts,
+outputs/plots/
+
