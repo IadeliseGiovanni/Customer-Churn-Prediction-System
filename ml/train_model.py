@@ -42,7 +42,7 @@ def tune_xgb_with_optuna(
     y: pd.Series,
     preprocessor: ColumnTransformer,
     scale_pos_weight: float,
-    n_trials: int = 50,
+    n_trials: int = 24,
     random_state: int = 42,
 ) -> dict:
     """Ottimizza XGBoost con Optuna usando F2 in cross-validation.
