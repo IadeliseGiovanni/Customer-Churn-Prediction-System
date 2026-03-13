@@ -6,8 +6,9 @@
 ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)
 ![Frontend](https://img.shields.io/badge/Frontend-HTML5_JS-orange?logo=html5&logoColor=white)
 
+## Progetto
+<img width="1328" height="1238" alt="image" src="https://github.com/user-attachments/assets/8b7f60de-2480-4d75-bbd0-b7f739234630" />
 ## 🎯 Obiettivo del Progetto
-
 Sviluppare un sistema **API-First** per la previsione dell'abbandono clienti (Churn) nel settore Telco.
 Il servizio espone endpoint REST per l'inferenza real-time, progettati per massimizzare il valore di business intercettando il maggior numero di clienti a rischio (**Recall Focus**).
 
