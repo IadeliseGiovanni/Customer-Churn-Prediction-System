@@ -2,6 +2,18 @@
 
 ## Project Goal
 
+
+
+
+
+<img width="1328" height="1238" alt="image" src="https://github.com/user-attachments/assets/041a3347-e607-45c2-a830-690adbad2c02" />
+
+
+
+
+
+
+
 Build an end‑to‑end **Customer Churn Prediction system** that
 demonstrates skills in:
 
