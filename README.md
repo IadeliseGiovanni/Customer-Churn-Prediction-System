@@ -1,290 +1,142 @@
-<<<<<<< HEAD
-=======
-# Customer Churn Prediction --- Machine Learning Project
-
-## Project Goal
-
-
-
-
-
-<img width="1328" height="1238" alt="image" src="https://github.com/user-attachments/assets/041a3347-e607-45c2-a830-690adbad2c02" />
-
-
-
-
-
-
-
-Build an end‑to‑end **Customer Churn Prediction system** that
-demonstrates skills in:
-
--   Data Engineering
--   Machine Learning
--   Backend API development
--   Frontend data visualization
-
-The system predicts whether a customer is likely to **churn** using the
-**Telco Customer Churn dataset** and exposes predictions through an API
-and a dashboard.
-
-The project is designed to be **completed in 5 days by a team of 4
-people**.
-
-------------------------------------------------------------------------
-
-# Project Architecture
-
-    customer-churn-ml/
-
-    data/
-       raw/
-          telco_churn.csv
-       processed/
-          train_raw.csv
-          test_raw.csv
-
-    ml/
-       preprocessing.py
-       train_model.py
-       evaluate.py
-       predict.py
-
-    analysis/
-       eda.py
-       plots.py
-
-    backend/
-       api.py
-
-    frontend/
-       dashboard.py
-
-    utils/
-       data_loader.py
-
-    models/
-       churn_pipeline_v1.joblib
-
-    outputs/
-       metrics.csv
-       predictions.csv
-       plots/
-          churn_distribution.png
-          tenure_churn.png
-          monthly_charges_churn.png
-          correlation_matrix.png
-          feature_importance.png
-
-    requirements.txt
-    README.md
-
-------------------------------------------------------------------------
-
-# Pipeline
-
-The project follows a strict machine learning workflow.
-
-    DATASET
-       │
-       ▼
-    EDA + VISUALIZATION
-    (analysis/)
-       │
-       ▼
-    DATA CLEANING
-    (ml/preprocessing.py)
-       │
-       ▼
-    FEATURE ENGINEERING
-    (ml/preprocessing.py)
-       │
-       ▼
-    MODEL TRAINING
-    (ml/train_model.py)
-       │
-       ▼
-    MODEL EVALUATION
-    (ml/evaluate.py)
-       │
-       ▼
-    PREDICTIONS CSV
-    (ml/predict.py)
-       │
-       ▼
-    BACKEND API
-    (backend/api.py)
-       │
-       ▼
-    FRONTEND DASHBOARD
-    (frontend/dashboard.py)
-
-------------------------------------------------------------------------
-
-# Team Roles
-
-## Giovanni --- Data Engineer
-
-### Files
-
-utils/data_loader.py\
-ml/preprocessing.py
-
-### Responsibilities
-
--   Load the raw dataset
--   Clean missing values
--   Convert column formats
--   Remove duplicates
--   Split dataset into train/test
-
-### Output
-
-data/processed/train_raw.csv\
-data/processed/test_raw.csv
-
-------------------------------------------------------------------------
-
-## Davide --- Machine Learning Engineer
-
-### Files
-
-ml/train_model.py\
-ml/evaluate.py\
-ml/predict.py
-
-### Responsibilities
-
--   Build ML pipeline
--   Train RandomForest model
--   Evaluate model performance
--   Save trained model
--   Implement prediction functions
-
-### Output
-
-models/churn_pipeline_v1.joblib\
-outputs/metrics.csv\
-outputs/predictions.csv
-
-------------------------------------------------------------------------
-
-## Gabriele --- Backend + Frontend Developer
-
-### Backend
-
-backend/api.py
-
-Endpoints POST /predict\
-POST /predict_batch\
-GET /results\
-GET /download_results
-
-### Frontend
-
-frontend/dashboard.py
-
-Features - Single prediction - Batch prediction via CSV - Visualization
-of churn probability - Download predictions
-
-------------------------------------------------------------------------
-
-## Elisabetta --- Data Visualization & Analysis
-
-### Files
-
-analysis/eda.py\
-analysis/plots.py
-
-### Responsibilities
-
--   Exploratory Data Analysis
--   Create data visualizations
--   Provide insights about churn patterns
-
-### Charts
-
-outputs/plots/
-
-------------------------------------------------------------------------
-
-# Setup
-
-Create environment
-
-python3.12 -m venv venv\
-source venv/bin/activate
-
-Install dependencies
-
+# 🚀 Customer Churn Prediction API
+
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
+![XGBoost](https://img.shields.io/badge/Model-XGBoost_Pipeline-orange?logo=xgboost&logoColor=white)
+![Optuna](https://img.shields.io/badge/Tuning-Optuna-blueviolet)
+![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)
+![Frontend](https://img.shields.io/badge/Frontend-HTML5_JS-orange?logo=html5&logoColor=white)
+
+## 🎯 Obiettivo del Progetto
+
+Sviluppare un sistema **API-First** per la previsione dell'abbandono clienti (Churn) nel settore Telco.
+Il servizio espone endpoint REST per l'inferenza real-time, progettati per massimizzare il valore di business intercettando il maggior numero di clienti a rischio (**Recall Focus**).
+
+Il progetto include:
+1.  **Pipeline ML Robusta**: Preprocessing, Feature Engineering avanzato e Tuning con Optuna.
+2.  **Quality Gates**: Controlli automatici su Recall, F1 e AUC per prevenire regressioni del modello.
+3.  **Deployment**: API performanti documentate automaticamente (Swagger UI).
+
+---
+
+## 📂 Struttura del Progetto
+
+L'organizzazione del codice separa la pipeline di Machine Learning (training/valutazione) dalla logica di analisi e inferenza.
+
+```plaintext
+Customer-Churn-Prediction-System/
+│
+├── 📂 data/                   # Dataset Raw e Processati
+├── 📂 ml/                     # Pipeline ML
+│   ├── preprocessing.py       # Pulizia, Split Train/Test, Feature Engineering
+│   ├── train_model.py         # Training XGBoost, Tuning (Optuna), Diagnostica
+│   ├── evaluate.py            # Calcolo metriche, Quality Gates, Report
+│   └── predict.py             # Entrypoint per inferenza (usato da API)
+├── 📂 analysis/               # Analisi Esplorativa
+│   └── plots.py               # Generazione batch di grafici business & insight
+├── 📂 backend/                # API Service
+│   └── api.py                 # Endpoint FastAPI
+├── 📂 frontend/               # Dashboard Web
+│   ├── index.html             # UI (HTML5)
+│   ├── style.css              # Stili (CSS3)
+│   └── script.js              # Logica Client (JS)
+├── 📂 models/                 # Artifacts
+│   └── churn_pipeline_v1.joblib
+└── 📂 outputs/                # Report e Immagini
+    ├── metrics.csv
+    └── plots/                 # Grafici generati (EDA, Confusion Matrix, ecc.)
+```
+
+---
+
+## ⚙️ Pipeline ML
+
+La pipeline è orchestrata per trasformare i dati grezzi in insight azionabili.
+
+### 1. Preprocessing (`ml/preprocessing.py`)
+-   **Cleaning**: Gestione valori mancanti e conversione tipi.
+-   **Feature Engineering**:
+    -   `NumServices`: Indice di "stickiness" basato sui servizi attivi.
+    -   `AvgMonthlySpend`: Spesa media normalizzata sulla tenure.
+    -   Encoding variabili categoriche e target.
+
+### 2. Training & Tuning (`ml/train_model.py`)
+-   **Modello**: XGBoost Classifier.
+-   **Ottimizzazione**: Utilizzo di **Optuna** per massimizzare la metrica **F2-Score** (privilegiando la Recall per non perdere clienti churn).
+-   **Diagnostica**: Generazione automatica di curve di apprendimento e grafici overfitting.
+
+### 3. Valutazione (`ml/evaluate.py`)
+-   **Metriche**: Accuracy, Precision, Recall, F1, ROC-AUC.
+-   **Quality Gate**: Il modello viene accettato solo se:
+    -   Recall >= 0.78 🛡️
+    -   ROC AUC >= 0.84 🛡️
+
+---
+
+##  Quick Start
+
+### 1. Installazione
+Clona la repository e installa le dipendenze:
+
+```bash
+# Crea virtual env (Python 3.10+)
+python -m venv venv
+source venv/bin/activate  # Mac/Linux
+# venv\Scripts\activate   # Windows
+
+# Installa requisiti
 pip install -r requirements.txt
+```
 
-------------------------------------------------------------------------
+### 2. Esecuzione Pipeline ML
+Esegui i moduli in sequenza per rigenerare il modello:
 
-# Run Pipeline
-
-Preprocessing
-
+```bash
+# 1. Preprocessing e Feature Engineering
 python ml/preprocessing.py
 
-Training
-
+# 2. Training e Ottimizzazione Iperparametri
 python ml/train_model.py
 
-Evaluation
-
+# 3. Valutazione e Report
 python ml/evaluate.py
+```
 
-Generate plots
+### 3. Generazione Report Grafici
+Crea i grafici per l'analisi business in `outputs/plots`:
 
+```bash
 python analysis/plots.py
+```
 
-------------------------------------------------------------------------
+### 4. Avvio Applicazione Web
 
-# Run Application
+Lancia il Backend API e apri la Dashboard Frontend:
 
-Start backend
-
+**Terminale 1 - Backend API:**
+```bash
 uvicorn backend.api:app --reload
+```
 
-Start dashboard
-
+**Terminale 2 - Frontend Dashboard:**
+```bash
 streamlit run frontend/dashboard.py
+```
 
-------------------------------------------------------------------------
+---
 
-# Expected Outputs
+## 📊 Expected Outputs
 
-models/ churn_pipeline_v1.joblib
+Al termine dell'esecuzione, troverai nella cartella `outputs/`:
 
-outputs/ metrics.csv\
-predictions.csv\
-plots/
+-   **`metrics.csv`**: Le performance dettagliate del modello.
+-   **`plots/confusion_matrix_xgb.png`**: Per visualizzare i Falsi Negativi (Clienti persi).
+-   **`plots/feature_importance.png`**: Le variabili che impattano di più sul churn (es. Contratto mensile, Fibra Ottica).
+-   **`plots/overfitting_report.csv`**: Verifica della stabilità tra Train e Test set.
 
-------------------------------------------------------------------------
+---
 
-# Technologies
-
-Python 3.12\
-Pandas\
-Scikit-learn\
-FastAPI\
-Streamlit\
-Matplotlib\
-Seaborn
-
-------------------------------------------------------------------------
-
-# Project Objective
-
-This repository demonstrates a **complete machine learning system**
-including:
-
--   Data preparation
--   Model training
--   Model deployment
--   Data visualization
-
-The goal is to create a project suitable for **portfolio presentation to
-companies**.
->>>>>>> 5c0228072c7ea5167ce71a247d9e9a285d274500
+## 🛠️ Tecnologie Utilizzate
+*   **Core:** Python 3.10+, Pandas, NumPy
+*   **ML:** Scikit-learn, XGBoost, Optuna, Joblib
+*   **Vis:** Matplotlib, Seaborn
+*   **Web:** FastAPI, Streamlit, Pydantic
