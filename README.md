@@ -118,9 +118,7 @@ Lancia il Backend API e apri la Dashboard Frontend:
 uvicorn backend.api:app --reload
 ```
 
-**Terminale 2 - Frontend Dashboard:**
-```bash
-streamlit run frontend/dashboard.py
+
 ```
 
 ---
