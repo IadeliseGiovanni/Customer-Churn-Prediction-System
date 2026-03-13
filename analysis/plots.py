@@ -13,7 +13,6 @@ plt.rcParams.update({
     'axes.titlesize': 14,
     'axes.titleweight': 'bold',
     'legend.frameon': False
-    
 })
 
 PALETTE = {"0": "#2a9d8f", "1": "#e76f51"}
@@ -44,7 +43,7 @@ def plot_tenure_kde(df, output_path):
     """
     plt.figure(figsize=(10, 5))
     for val, label in [("0", "Stayed"), ("1", "Churned")]:
-        sns.kdeplot(data=df[df["Churn Value"] == val], x="TenureMonths", 
+        sns.kdeplot(data=df[df["ChurnValue"] == val], x="TenureMonths",
                     fill=True, label=label, color=PALETTE[val], alpha=0.5)
     plt.title("Distribuzione della Tenure: Clienti Fedeli vs Churned")
     plt.legend()
@@ -58,14 +57,14 @@ def plot_monthly_charges_kde(df, output_path):
     """
     plt.figure(figsize=(10, 5))
     for val, label in [("0", "Stayed"), ("1", "Churned")]:
-        sns.kdeplot(data=df[df["Churn Value"] == val], x="MonthlyCharges", 
+        sns.kdeplot(data=df[df["ChurnValue"] == val], x="MonthlyCharges",
                     fill=True, label=label, color=PALETTE[val], alpha=0.5)
     plt.title("Impatto dei Costi Mensili sul Churn")
     plt.legend()
     plt.savefig(output_path / "MonthlyCharges_KDE_Distribution.png", dpi=300, bbox_inches='tight')
 
     plt.close()
-
+#
 def plot_contract_churn(df, output_path):
     """
     Confronto contratti e Churn Rate.
@@ -129,7 +128,7 @@ def plot_tenure_group_rate(df, output_path):
     Churn Rate raggruppato per fasce di anzianità.
     Insight: Il churn cala drasticamente dopo il primo anno (0-12 mesi).
     """
-    df["Tenure Group"] = pd.cut(df["Tenure Months"].astype(float), bins=[0, 12, 24, 48, 72],
+    df["Tenure Group"] = pd.cut(df["TenureMonths"].astype(float), bins=[0, 12, 24, 48, 72],
                                  labels=["0-12", "12-24", "24-48", "48-72"])
     temp_df = df.copy()
     temp_df["ChurnValue"] = temp_df["ChurnValue"].astype(int)
@@ -147,10 +146,10 @@ def plot_scatter_tenure_charges(df, output_path):
     Insight: Identifica la 'Red Zone' (clienti nuovi ad alto costo).
     """
     plt.figure(figsize=(12, 8))
-    sns.scatterplot(data=df, x="TenureMonths", y="MonthlyCharges", hue="Churn Value", 
+    sns.scatterplot(data=df, x="TenureMonths", y="MonthlyCharges", hue="ChurnValue",
                     palette=PALETTE, alpha=0.4, s=30, edgecolor=None)
     plt.axvline(x=12, color='grey', linestyle='--', alpha=0.5)
-    plt.axhline(y=df["Monthly Charges"].mean(), color='grey', linestyle='--', alpha=0.5)
+    plt.axhline(y=df["MonthlyCharges"].mean(), color='grey', linestyle='--', alpha=0.5)
     plt.title("Analisi Congiunta: Tenure vs Monthly Charges")
     plt.savefig(output_path / "Scatter_Tenure_vs_Charges.png", dpi=300, bbox_inches='tight')
     plt.close()
@@ -247,7 +246,7 @@ def plot_economic_value_dist(df, output_path):
     Insight: Mostra la 'pancia' della spesa dei clienti che se ne vanno rispetto a chi resta.
     """
     plt.figure(figsize=(10, 6))
-    sns.violinplot(x="Churn Value", y="Avg Monthly Spend", data=df, palette=PALETTE, inner="quart")
+    sns.violinplot(x="ChurnValue", y="AvgMonthlySpend", data=df, palette=PALETTE, inner="quart")
     plt.title("Distribuzione Spesa Media Mensile per Status Churn")
     plt.savefig(output_path / "economic_value_distribution.png", dpi=300)
     plt.close()
@@ -260,7 +259,7 @@ def plot_charges_per_service_analysis(df, output_path):
     """
     plt.figure(figsize=(10, 5))
     for val, label in [("0", "Stayed"), ("1", "Churned")]:
-        sns.kdeplot(data=df[df["Churn Value"] == val], x="Charges per Service", 
+        sns.kdeplot(data=df[df["ChurnValue"] == val], x="ChargesPerService",
                     fill=True, label=label, color=PALETTE[val], alpha=0.5)
     plt.title("Efficienza del Costo: Charges per Service vs Churn")
     plt.xlabel("Costo medio per singolo servizio attivo ($)")
@@ -275,16 +274,16 @@ def plot_outliers_boxplots(df, output_path):
     """
     # Selezioniamo solo le numeriche che possono avere outlier reali
     cols_to_plot = [
-        'TenureMonths', 
-        'MonthlyCharges', 
-        'TotalCharges', 
-        'Avg Monthly Spend', 
-        'Charges per Service'
+        'TenureMonths',
+        'MonthlyCharges',
+        'TotalCharges',
+        'AvgMonthlySpend',
+        'ChargesPerService'
     ]
 
     # Assicuriamoci che TotalCharges sia numerico (spesso è object nei raw)
     df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
-    
+
     plt.figure(figsize=(16, 10))
     for i, col in enumerate(cols_to_plot, 1):
         plt.subplot(2, 3, i)
@@ -326,6 +325,87 @@ def plot_churn_heatmap_grid(df, output_path):
     plt.savefig(output_path / "Churn_Heatmap_Grid.png", dpi=300, bbox_inches='tight')
     plt.close()
 
+def generate_all_plots(root_path=None):
+    """Generate a small, frontend-friendly set of plots.
+
+    Used by FastAPI endpoint POST /generate-plots.
+
+    Reads:
+      - data/processed/train_raw.csv
+      - data/processed/test_raw.csv
+
+    Writes:
+      - outputs/plots/*.png
+      - outputs_front-end/*.png (served by the backend at /outputs-frontend)
+
+    Note:
+    - The ML pipeline uses a spaced-column schema (e.g. "Churn Value", "Tenure Months").
+      This wrapper aliases columns to the legacy names expected by the plotting functions
+      (e.g. "ChurnValue", "TenureMonths").
+    """
+
+    root = Path(root_path) if root_path else Path(__file__).resolve().parents[1]
+    proc_dir = root / "data" / "processed"
+    out_dir = root / "outputs" / "plots"
+    out_front_dir = root / "outputs_front-end"
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_front_dir.mkdir(parents=True, exist_ok=True)
+
+    train_path = proc_dir / "train_raw.csv"
+    test_path = proc_dir / "test_raw.csv"
+    if not train_path.exists() or not test_path.exists():
+        raise FileNotFoundError(
+            "Processed data not found. Run preprocessing first to create "
+            "data/processed/train_raw.csv and data/processed/test_raw.csv."
+        )
+
+    df = pd.concat([pd.read_csv(train_path), pd.read_csv(test_path)], axis=0, ignore_index=True)
+
+    # Alias spaced-column schema -> legacy schema used by this module's plots.
+    rename_map = {
+        "Churn Value": "ChurnValue",
+        "Tenure Months": "TenureMonths",
+        "Monthly Charges": "MonthlyCharges",
+        "Total Charges": "TotalCharges",
+        "Phone Service": "PhoneService",
+        "Multiple Lines": "MultipleLines",
+        "Internet Service": "InternetService",
+        "Online Security": "OnlineSecurity",
+        "Online Backup": "OnlineBackup",
+        "Device Protection": "DeviceProtection",
+        "Tech Support": "TechSupport",
+        "Streaming TV": "StreamingTV",
+        "Streaming Movies": "StreamingMovies",
+        "Paperless Billing": "PaperlessBilling",
+        "Payment Method": "PaymentMethod",
+        "Senior Citizen": "SeniorCitizen",
+    }
+    df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns and v not in df.columns})
+
+    if "ChurnValue" in df.columns:
+        # Most plots in this file expect "0"/"1" strings.
+        try:
+            df["ChurnValue"] = pd.to_numeric(df["ChurnValue"], errors="coerce").fillna(0).astype(int).astype(str)
+        except Exception:
+            df["ChurnValue"] = df["ChurnValue"].astype(str)
+
+    errors = {}
+
+    def _run(plot_fn, name):
+        try:
+            plot_fn(df.copy(), out_dir)
+            plot_fn(df.copy(), out_front_dir)
+        except Exception as e:
+            errors[name] = str(e)
+
+    # Minimal set used by the frontend gallery.
+    _run(plot_churn_distribution, "plot_churn_distribution")
+    _run(plot_contract_churn, "plot_contract_churn")
+    _run(plot_tenure_group_rate, "plot_tenure_group_rate")
+    _run(plot_churn_heatmap_grid, "plot_churn_heatmap_grid")
+
+    return {"out_dir": str(out_dir), "out_front_dir": str(out_front_dir), "errors": errors}
 # --- MAIN EXECUTION ---
 
 if __name__ == "__main__":
@@ -363,77 +443,3 @@ if __name__ == "__main__":
     plot_outliers_boxplots(df, OUT_DIR)
     
     print(f"Analisi completata. Grafici salvati in: {OUT_DIR}")
-
-
-def generate_all_plots(root_path: Path | str) -> None:
-    """Wrapper usato dal backend per generare i plot usando i CSV processed.
-
-    Non riscrive le funzioni di plotting esistenti: crea alias di colonne (con e senza spazi)
-    per mantenere compatibilita con le funzioni gia presenti in questo modulo.
-    """
-
-    root_path = Path(root_path)
-    proc_dir = root_path / "data" / "processed"
-    out_dir = root_path / "outputs" / "plots"
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    df_train = pd.read_csv(proc_dir / "train_raw.csv")
-    df_test = pd.read_csv(proc_dir / "test_raw.csv")
-    df = pd.concat([df_train, df_test], axis=0, ignore_index=True)
-
-    # Alias colonne senza spazi -> con spazi (per compatibilita con funzioni esistenti)
-    alias_map = {
-        "ChurnValue": "Churn Value",
-        "TenureMonths": "Tenure Months",
-        "MonthlyCharges": "Monthly Charges",
-        "TotalCharges": "Total Charges",
-        "InternetService": "Internet Service",
-        "PaymentMethod": "Payment Method",
-        "PaperlessBilling": "Paperless Billing",
-        "SeniorCitizen": "Senior Citizen",
-        "PhoneService": "Phone Service",
-        "MultipleLines": "Multiple Lines",
-        "OnlineSecurity": "Online Security",
-        "OnlineBackup": "Online Backup",
-        "DeviceProtection": "Device Protection",
-        "TechSupport": "Tech Support",
-        "StreamingTV": "Streaming TV",
-        "StreamingMovies": "Streaming Movies",
-        "AvgMonthlySpend": "Avg Monthly Spend",
-        "ChargesPerService": "Charges per Service",
-    }
-
-    for src, dst in alias_map.items():
-        if src in df.columns and dst not in df.columns:
-            df[dst] = df[src]
-
-    # Le funzioni spesso si aspettano churn come stringa ("0"/"1") per il palette.
-    if "Churn Value" in df.columns:
-        df["Churn Value"] = df["Churn Value"].astype(str)
-    if "ChurnValue" in df.columns:
-        df["ChurnValue"] = df["ChurnValue"].astype(str)
-
-    # Chiamata alle funzioni di plot disponibili; skip impliciti se mancano colonne.
-    safe_calls = [
-        plot_churn_distribution,
-        plot_tenure_kde,
-        plot_monthly_charges_kde,
-        plot_contract_churn,
-        plot_services_and_payment,
-        plot_tenure_group_rate,
-        plot_scatter_tenure_charges,
-        plot_num_services_count,
-        plot_full_correlation_matrix,
-        plot_demographic_analysis,
-        plot_economic_value_dist,
-        plot_charges_per_service_analysis,
-        plot_outliers_boxplots,
-        plot_churn_heatmap_grid,
-    ]
-
-    for fn in safe_calls:
-        try:
-            fn(df, out_dir)
-        except Exception:
-            # Non blocchiamo l'endpoint se un singolo plot non e generabile con le colonne presenti.
-            continue

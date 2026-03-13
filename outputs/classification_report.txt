@@ -1,8 +1,9 @@
+=== XGBoost pipeline ===
               precision    recall  f1-score   support
 
-           0       0.91      0.73      0.81      1033
-           1       0.52      0.80      0.63       372
+           0     0.9100    0.7338    0.8124      1033
+           1     0.5192    0.7984    0.6292       372
 
-    accuracy                           0.75      1405
-   macro avg       0.71      0.77      0.72      1405
-weighted avg       0.81      0.75      0.76      1405
+    accuracy                         0.7509      1405
+   macro avg     0.7146    0.7661    0.7208      1405
+weighted avg     0.8065    0.7509    0.7639      1405

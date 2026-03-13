@@ -1,275 +1,185 @@
-# Customer Churn Prediction --- Machine Learning Project
+# Customer Churn Prediction System
 
-## Project Goal
+End-to-end demo project: data preprocessing + ML training (XGBoost) + FastAPI backend + simple frontend dashboard.
 
-Build an end‑to‑end **Customer Churn Prediction system** that
-demonstrates skills in:
+## Screenshot
 
--   Data Engineering
--   Machine Learning
--   Backend API development
--   Frontend data visualization
+![Dashboard UI](image.png)
 
-The system predicts whether a customer is likely to **churn** using the
-**Telco Customer Churn dataset** and exposes predictions through an API
-and a dashboard.
+## What You Get
 
-The project is designed to be **completed in 5 days by a team of 4
-people**.
+- ML pipeline (preprocess, train, evaluate, predict)
+- FastAPI API for predictions and pipeline triggers
+- Static frontend (HTML/CSS/JS) with:
+  - Admin-only login (demo)
+  - Churn prediction form
+  - Plots gallery loaded from `/outputs-frontend`
 
-------------------------------------------------------------------------
+## Repository Layout
 
-# Project Architecture
+```
+Customer-Churn-Prediction-System/
+  analysis/
+    plots.py
+  backend/
+    api.py
+  data/
+    raw/
+      Telco_customer_churn.csv
+    processed/
+      train_raw.csv
+      test_raw.csv
+  frontend/
+    index.html
+    script.js
+    style.css
+  ml/
+    preprocessing.py
+    train_model.py
+    evaluate.py
+    predict.py
+  models/
+    churn_pipeline_v1.joblib
+  outputs/
+    metrics.csv
+    classification_report.txt
+    confusion_matrix_xgb.png
+    plots/
+  outputs_front-end/
+    *.png
+  requirements.txt
+```
 
-    customer-churn-ml/
+## Quickstart
 
-    data/
-       raw/
-          telco_churn.csv
-       processed/
-          train_raw.csv
-          test_raw.csv
+### 1) Create venv + install deps
 
-    ml/
-       preprocessing.py
-       train_model.py
-       evaluate.py
-       predict.py
+Windows (PowerShell):
 
-    analysis/
-       eda.py
-       plots.py
-
-    backend/
-       api.py
-
-    frontend/
-       dashboard.py
-
-    utils/
-       data_loader.py
-
-    models/
-       churn_pipeline_v1.joblib
-
-    outputs/
-       metrics.csv
-       predictions.csv
-       plots/
-          churn_distribution.png
-          tenure_churn.png
-          monthly_charges_churn.png
-          correlation_matrix.png
-          feature_importance.png
-
-    requirements.txt
-    README.md
-
-------------------------------------------------------------------------
-
-# Pipeline
-
-The project follows a strict machine learning workflow.
-
-    DATASET
-       │
-       ▼
-    EDA + VISUALIZATION
-    (analysis/)
-       │
-       ▼
-    DATA CLEANING
-    (ml/preprocessing.py)
-       │
-       ▼
-    FEATURE ENGINEERING
-    (ml/preprocessing.py)
-       │
-       ▼
-    MODEL TRAINING
-    (ml/train_model.py)
-       │
-       ▼
-    MODEL EVALUATION
-    (ml/evaluate.py)
-       │
-       ▼
-    PREDICTIONS CSV
-    (ml/predict.py)
-       │
-       ▼
-    BACKEND API
-    (backend/api.py)
-       │
-       ▼
-    FRONTEND DASHBOARD
-    (frontend/dashboard.py)
-
-------------------------------------------------------------------------
-
-# Team Roles
-
-## Giovanni --- Data Engineer
-
-### Files
-
-utils/data_loader.py\
-ml/preprocessing.py
-
-### Responsibilities
-
--   Load the raw dataset
--   Clean missing values
--   Convert column formats
--   Remove duplicates
--   Split dataset into train/test
-
-### Output
-
-data/processed/train_raw.csv\
-data/processed/test_raw.csv
-
-------------------------------------------------------------------------
-
-## Davide --- Machine Learning Engineer
-
-### Files
-
-ml/train_model.py\
-ml/evaluate.py\
-ml/predict.py
-
-### Responsibilities
-
--   Build ML pipeline
--   Train RandomForest model
--   Evaluate model performance
--   Save trained model
--   Implement prediction functions
-
-### Output
-
-models/churn_pipeline_v1.joblib\
-outputs/metrics.csv\
-outputs/predictions.csv
-
-------------------------------------------------------------------------
-
-## Gabriele --- Backend + Frontend Developer
-
-### Backend
-
-backend/api.py
-
-Endpoints POST /predict\
-POST /predict_batch\
-GET /results\
-GET /download_results
-
-### Frontend
-
-frontend/dashboard.py
-
-Features - Single prediction - Batch prediction via CSV - Visualization
-of churn probability - Download predictions
-
-------------------------------------------------------------------------
-
-## Elisabetta --- Data Visualization & Analysis
-
-### Files
-
-analysis/eda.py\
-analysis/plots.py
-
-### Responsibilities
-
--   Exploratory Data Analysis
--   Create data visualizations
--   Provide insights about churn patterns
-
-### Charts
-
-outputs/plots/
-
-------------------------------------------------------------------------
-
-# Setup
-
-Create environment
-
-python3.12 -m venv venv\
-source venv/bin/activate
-
-Install dependencies
-
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+```
 
-------------------------------------------------------------------------
+macOS/Linux:
 
-# Run Pipeline
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-Preprocessing
+### 2) Run the ML pipeline (optional but recommended)
 
-python ml/preprocessing.py
+```powershell
+# Preprocess raw data -> data/processed/*.csv
+python .\ml\preprocessing.py
 
-Training
+# Train model -> models/churn_pipeline_v1.joblib (plus diagnostics in models/)
+python .\ml\train_model.py
 
-python ml/train_model.py
+# Evaluate -> outputs/metrics.csv + confusion matrix
+python .\ml\evaluate.py
+```
 
-Evaluation
+### 3) Start the backend API
 
-python ml/evaluate.py
-
-Generate plots
-
-python analysis/plots.py
-
-------------------------------------------------------------------------
-
-# Run Application
-
-Start backend
-
+```powershell
 uvicorn backend.api:app --reload
+```
 
-Start dashboard
+API will be available at:
+- `http://127.0.0.1:8000`
+- Swagger UI: `http://127.0.0.1:8000/docs`
 
-streamlit run frontend/dashboard.py
+### 4) Start the frontend
 
-------------------------------------------------------------------------
+The frontend is static. You should serve it with a local web server.
 
-# Expected Outputs
+Option A (Python):
 
-models/ churn_pipeline_v1.joblib
+```powershell
+cd .\frontend
+python -m http.server 5173
+```
 
-outputs/ metrics.csv\
-predictions.csv\
-plots/
+Then open: `http://127.0.0.1:5173`
 
-------------------------------------------------------------------------
+Option B: VS Code Live Server (or any static server).
 
-# Technologies
+## Admin Login (Demo)
 
-Python 3.12\
-Pandas\
-Scikit-learn\
-FastAPI\
-Streamlit\
-Matplotlib\
-Seaborn
+The dashboard is protected by a very simple demo login:
 
-------------------------------------------------------------------------
+- Username: `admin`
+- Password: `admin`
 
-# Project Objective
+Note: this is client-side only (sessionStorage). It is for demo UI gating, not real security.
 
-This repository demonstrates a **complete machine learning system**
-including:
+## API Endpoints
 
--   Data preparation
--   Model training
--   Model deployment
--   Data visualization
+Base URL: `http://127.0.0.1:8000`
 
-The goal is to create a project suitable for **portfolio presentation to
-companies**.
+- `GET /` health check
+- `POST /predict` single-customer churn prediction
+- `POST /preprocess` runs `ml.preprocessing.main()`
+- `POST /train` runs `ml.train_model.run_training_pipeline(...)`
+- `POST /evaluate` runs `ml.evaluate.evaluate_model(...)`
+- `POST /generate-plots` generates a small set of PNGs for the frontend gallery
+- `GET /outputs/...` static files from `outputs/`
+- `GET /outputs-frontend/...` static files from `outputs_front-end/`
+
+### Example: `/predict`
+
+Request body (JSON):
+
+```json
+{
+  "Gender": "Male",
+  "SeniorCitizen": 0,
+  "Partner": "Yes",
+  "Dependents": "No",
+  "tenure": 12,
+  "PhoneService": "Yes",
+  "MultipleLines": "No",
+  "InternetService": "Fiber optic",
+  "OnlineSecurity": "No",
+  "OnlineBackup": "Yes",
+  "DeviceProtection": "No",
+  "TechSupport": "No",
+  "StreamingTV": "Yes",
+  "StreamingMovies": "No",
+  "Contract": "Month-to-month",
+  "PaperlessBilling": "Yes",
+  "PaymentMethod": "Electronic check",
+  "MonthlyCharges": 70.0,
+  "TotalCharges": 840.0
+}
+```
+
+Response (example):
+
+```json
+{
+  "model_used": "xgb_pipeline",
+  "churn_probability": 0.42,
+  "prediction": 0
+}
+```
+
+## Notes On Data Schema
+
+- The ML pipeline uses a spaced-column schema in training data (e.g. `Churn Value`, `Tenure Months`).
+- The API accepts frontend-friendly keys without spaces (e.g. `tenure`, `MonthlyCharges`).
+- `ml/predict.py` aligns the incoming record to the model's expected feature set.
+
+## Tech Stack
+
+- Python
+- Pandas / NumPy
+- scikit-learn
+- XGBoost + Optuna
+- FastAPI + Uvicorn
+- Matplotlib / Seaborn
+- Vanilla HTML/CSS/JS frontend

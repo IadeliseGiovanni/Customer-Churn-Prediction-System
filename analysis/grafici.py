@@ -13,3 +13,14 @@ df = pd.read_csv(PROCESSED)
 sns.countplot(x="Churn", data=df)
 plt.savefig(OUT / "churn_distribution.png")
 plt.close()
+
+
+def generate_plot():
+    """Carica i dati e genera il grafico sulla distribuzione del churn."""
+    df = pd.read_csv(PROCESSED)
+    
+    sns.countplot(x="Churn", data=df)
+    plt.savefig(OUT / "churn_distribution.png")
+    plt.close()
+    print(f"Grafico salvato in: {OUT / 'churn_distribution.png'}")
+
